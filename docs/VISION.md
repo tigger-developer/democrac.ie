@@ -1,6 +1,6 @@
 ---
 title: democrac.ie - Vision
-version: 2
+version: 3
 last-updated: 2026-10-02
 ---
 
@@ -27,6 +27,7 @@ Polls use PR-STV, the voting system used in Irish elections (not to the legal le
 - **Passwordless.** The site follows the same magic-link login pattern as the rest of the fleet: enter an email address, receive a time-limited login link, click, done. No passwords, no accounts to manage.
 - **Explain the result, not just announce it.** Results are presented as a round-by-round story: round one tallies, the lowest-scoring option eliminated, votes transferred, next round tallies, and so on until a winner emerges - complete with a clear visualization and a plain-language explainer of what happened to each ballot.
 - **Accessible.** Device friendly, screen-reader friendly, plain language.
+- **Auditable.** Every count is reproducible from the recorded ballots. Ties between options at the elimination boundary are resolved by a random draw, and the draw - including what was drawn and in what order - is recorded in the poll's audit trail. Every state mutation appends to the audit trail, and the audit trail is itself plain-text CSV/TSV.
 
 ## MVP
 
@@ -38,6 +39,7 @@ The MVP is a single decision poll product, deliberately narrow.
 4. **Duplicate deterrence:** MVP cannot truly prevent repeat voting; it sets a cookie after voting and declines a second ballot from the same browser.
 5. **Close:** the poll creator closes the poll manually. There is no scheduled close in the MVP.
 6. **Results:** once closed, anyone with the link sees the full round-by-round count - each round's tallies, which option was eliminated and why, how votes transferred, and the final winner - rendered as an engaging, visual, plain-language explainer.
+7. **Tie handling and audit trail:** when two or more options tie for lowest score at an elimination boundary, the system eliminates one by random draw and records the draw and its order in the audit trail. Every poll mutation - creation, option edits, ballots, close, count events - appends a line to the poll's plain-text CSV/TSV audit trail.
 
 ### MVP technology
 
