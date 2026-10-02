@@ -1,6 +1,6 @@
 ---
 title: democrac.ie - MVP Scope
-version: 1
+version: 2
 last-updated: 2026-10-02
 ---
 
@@ -51,14 +51,15 @@ This document defines the minimal first deliverable. Everything here is drawn fr
 
 ### 6. Audit trail (always on)
 
-- Every poll mutation appends a line to the poll's plain-text CSV/TSV audit trail: creation, option edits, ballots, duplicate rejections, close, and count events
-- Tie draws at an elimination boundary are resolved by random draw, and the draw, the options involved, and the draw order are recorded
-- The full count is reproducible from the audit trail alone
+- Every poll has one UUID-named directory under `STATE_DIRECTORY/polls/` containing an authoritative append-only `events.tsv`; creation, option edits, ballots, duplicate rejections, close and count events are recorded there
+- Each event occupies one TSV line; JSON-encoded payloads preserve tabs and newlines in user text
+- Tie draws at an elimination boundary are resolved by random draw; each draw event records the tied options in order, random-source identifier and algorithm version, sample, selection mapping and resulting elimination
+- Closure freezes the accepted ballots and records the count once. Results views use that recorded count, never redraw on reload. The full count can be verified by replaying the events
 
 ## MVP Technical Commitments
 
 - Single Go binary; stdlib HTTP; htmx + vanilla JS; one responsive CSS file covering phone, tablet and desktop
-- Append-only CSV state under `STATE_DIRECTORY`, deduplicated on read, last write wins (meet/upload model)
+- One append-only TSV event log per UUID-named poll directory under `STATE_DIRECTORY/polls/`; no separate authoritative state or audit file
 - Magic-link mail via the local-mail runtime contract only; the app never configures SMTP
 - Full Exodan NixOS project-integration contract compliance (see ARCHITECTURE.md)
 - Apache 2.0 licence
@@ -81,7 +82,11 @@ This document defines the minimal first deliverable. Everything here is drawn fr
 2. A voter on a phone can complete a ballot, including partial rankings, comfortably one-handed
 3. Submitting a ballot, then attempting another from the same browser, shows the duplicate-deterrence message
 4. Closing the poll rejects further ballots
-5. After close, the results page shows every round, every elimination with its reason, every tie draw as recorded in the audit trail, and the winner
-6. Deleting the in-memory count and re-rendering results from the CSV state (including audit-recorded draws) reproduces the identical result
+5. After close, the results page shows every round, every elimination with its reason, every tie draw as recorded in `events.tsv`, and the winner
+6. Reloading results does not recount or redraw; replaying the closed poll's event log verifies the same outcome using its recorded ballot set and draws
 7. The site is usable, at full fidelity, on phone, tablet, and desktop
 8. Screen-reader users can read a ballot, submit it, and read the results story
+
+## Document Changelog
+
+- **Version 2:** Located each poll in a UUID-named directory with one authoritative TSV event log; aligned close-time count and tie-draw evidence with the architecture.

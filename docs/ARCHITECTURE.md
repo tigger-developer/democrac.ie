@@ -1,10 +1,12 @@
 ---
 title: democrac.ie - Architecture
-version: 1
+version: 2
 last-updated: 2026-10-02
 ---
 
 # democrac.ie - Architecture
+
+**Status: proposed.** This document describes the intended system, not an implemented service. The first deliverable is scoped in [MVP.md](MVP.md); longer-term product direction is in [VISION.md](VISION.md).
 
 ## Overview
 
@@ -18,7 +20,7 @@ democrac.ie is a free ranked-choice decision poll: create a poll, add options, s
 4. **Duplicate deterrence:** a cookie is set after voting and a second ballot from the same browser is declined
 5. **Close:** the creator closes the poll manually
 6. **Results:** after close, anyone with the link sees the round-by-round count with visualization and plain-language explanation
-7. **Audit:** every poll mutation appends to a plain-text CSV/TSV audit trail; ties at the elimination boundary are resolved by a recorded random draw
+7. **Audit:** every poll mutation appends to the poll's authoritative TSV event log; ties at the elimination boundary are resolved by a recorded random draw
 
 ### What is NOT required
 
@@ -57,7 +59,9 @@ Single-winner instant runoff (PR-STV in substance, one winner):
 
 **Exhausted ballots:** a ballot ranking only a "1" is valid and counts in every round its option survives; once its last ranked option is eliminated it is exhausted and counts in no further tally (but remains in the audit record).
 
-The count is deterministic given the ballots and the recorded draw outcomes; it is recomputed in memory from CSV state at results-render time and is reproducible from the audit trail alone.
+Closing a poll freezes its accepted ballot set. The close operation records the count's round tallies, eliminations, transfers, exhausted ballots, random draws and outcome in the same authoritative event stream. A results request reads the recorded outcome: it does not perform a new count or draw. Replay can independently verify the count from the recorded ballots and draw outcomes.
+
+Each draw event records the tied option IDs in a stable order, a random-source identifier and algorithm version, the sampled value, the mapping from that value to an option, and the eliminated option. Recording the source and sample permits replay; it does not by itself prove that the source was unbiased.
 
 ## Architecture
 
@@ -66,7 +70,7 @@ Standalone web application as a single Go binary, following the same pattern as 
 ```
 Go web server (single binary)
   ├── routing, magic-link auth, session cookies, static files
-  ├── CSV/TSV state store (append-only, last write wins)
+  ├── per-poll TSV event log (append-only, authoritative)
   ├── in-memory PR-STV count
   └── sendmail adapter (subprocess) - magic-link mail via local-mail contract
 ```
@@ -75,18 +79,21 @@ No database server, no message queue, no container orchestration, no external AP
 
 ### State Model
 
-All persistent state lives in `STATE_DIRECTORY` as append-only plain-text CSV files, deduplicated on read with last-write-wins semantics - the same model as meet and upload. Counting happens in memory from the CSV state.
+Each poll has a directory named by its UUID beneath `STATE_DIRECTORY/polls/`. Its `events.tsv` is the sole authority for poll state, ballots, closure and the frozen count. Other poll-owned files can be added in that directory, but any derived index, snapshot or rendered asset must remain rebuildable from the event stream. This differs deliberately from meet/upload's last-write-wins CSV records: a separate state file and audit file could disagree after a partial write.
 
+```text
+STATE_DIRECTORY/
+  polls/
+    <poll-uuid>/
+      events.tsv
+      ... optional rebuildable or poll-owned files
 ```
-polls.csv        poll_id, title, creator_email, state, created_at, closed_at
-options.csv     poll_id, option_id, name, description, position, created_at
-ballots.csv      poll_id, ballot_id, voter_name, rankings, submitted_at
-audit.csv        poll_id, event_id, timestamp, event_type, payload
-```
 
-The audit file records every poll mutation: creation, option edits, ballot submissions, duplicate-deterrence rejections, close, and each count event (round tallies, eliminations, draw outcomes including draw order). `rankings` on a ballot is an ordered list of option IDs; the audit trail stores the same ballot content, so the entire count is reproducible from `audit.csv` alone.
+Each event occupies one physical TSV line with a sequence number, timestamp, event type and JSON payload separated by tabs. JSON encoding preserves tabs and newlines in names and descriptions without letting them split the record. Event types cover creation, option edits, ballot submissions, rejected duplicate attempts, closure, count rounds and draw outcomes. The ballot event contains ordered option IDs; a replay of the log reconstructs the poll and validates the recorded result.
 
-A single CSV file locking discipline serializes appends; the reader tolerates a torn final line. Keys are immutable; corrections append new rows that supersede by key on read.
+Writes to an individual poll are serialized. The close operation must commit the frozen count as a complete outcome before exposing results; if it is interrupted, recovery resumes from the existing events without generating a second draw. The exact durability and recovery protocol, including detection of an incomplete final record or count, remains to be specified before implementation. Corrections append new events rather than rewriting prior evidence.
+
+Keeping all poll-owned data under one directory gives a future expiry routine a clear scope. The MVP does not purge polls; any later configurable purge must define its audit and retention consequences before removing the directory.
 
 ### Data Model
 
@@ -133,8 +140,8 @@ The rendering is server-side HTML plus progressive enhancement (vanilla JS): the
 | Component | Technology | Rationale |
 |---|---|---|
 | **Web framework** | Go (single binary) | Fast, low memory, stdlib handles HTTP/crypto; same pattern as the fleet's other apps |
-| **State store** | Append-only CSV/TSV under `STATE_DIRECTORY` | Zero configuration; human-readable; audit trail is the same medium as the state store; last-write-wins on read, as in meet and upload |
-| **Counting** | In-memory Go | Pure arithmetic; deterministic given ballots and recorded draws |
+| **State store** | One append-only TSV event log per UUID-named poll directory under `STATE_DIRECTORY` | One authoritative history; no dual-write state/audit mismatch |
+| **Counting** | In-memory Go at close | Freeze the count once; replay verifies ballots and recorded draws |
 | **Frontend** | htmx + vanilla JS + one CSS file | Minimal complexity; one responsive stylesheet for phone, tablet, desktop |
 | **Auth** | Passwordless magic email links (creators only) | No passwords; email is the sole authentication factor; session cookies for persistence |
 | **Token signing** | Go `crypto/hmac` + `crypto/sha256` | Time-limited signed tokens for magic links; no external dependency |
@@ -158,3 +165,7 @@ The app adheres to the NixOS project-integration contract:
 Mail requirements are modest: magic-link messages to poll creators only. The local-mail adapter's 10 MiB message limit and 50-recipient cap are irrelevant at this volume; the app builds complete RFC messages and owns the From header, using the sender patterns the mail contract prescribes.
 
 Backup, process supervision, health checks, and TLS are owned by the Exodan fleet.
+
+## Document Changelog
+
+- **Version 2:** Replaced separate last-write-wins CSV state and audit files with one authoritative TSV event stream per UUID-named poll directory; specified count freeze on close and recorded random-source evidence. Interrupted-close recovery remains an explicit design question.

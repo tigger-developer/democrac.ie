@@ -1,6 +1,6 @@
 ---
 title: democrac.ie - Vision
-version: 5
+version: 6
 last-updated: 2026-10-02
 ---
 
@@ -27,7 +27,7 @@ democrac.ie is a free, open-source way to make a decision together with your fri
 - **Passwordless.** The site follows the same magic-link login pattern as the rest of the fleet: enter an email address, receive a time-limited login link, click, done. No passwords, no accounts to manage.
 - **Explain the result, not just announce it.** Results are presented as a round-by-round story: round one tallies, the lowest-scoring option eliminated, votes transferred, next round tallies, and so on until a winner emerges - complete with a clear visualization and a plain-language explainer of what happened to each ballot.
 - **Accessible.** Device friendly, screen-reader friendly, plain language.
-- **Auditable.** Every count is reproducible from the recorded ballots. Ties between options at the elimination boundary are resolved by a random draw, and the draw - including what was drawn and in what order - is recorded in the poll's audit trail. Every state mutation appends to the audit trail, and the audit trail is itself plain-text CSV/TSV.
+- **Auditable.** Every count is reproducible from the recorded ballots. Ties between options at the elimination boundary are resolved by a random draw, and the draw - including what was drawn and in what order - is recorded in the poll's audit trail. Every state mutation appends to the audit trail, and the audit trail is plain-text TSV.
 
 ## MVP
 
@@ -47,3 +47,7 @@ Each item is a candidate for later phases, configurable by the poll creator wher
 
 LICENSE
 Apache 2.0
+
+## Document Changelog
+
+- **Version 6:** Clarified that the poll audit trail uses TSV; the per-poll storage design belongs in the architecture.
