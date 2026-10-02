@@ -1,6 +1,6 @@
 ---
 title: democrac.ie - Vision
-version: 4
+version: 5
 last-updated: 2026-10-02
 ---
 
@@ -31,32 +31,7 @@ democrac.ie is a free, open-source way to make a decision together with your fri
 
 ## MVP
 
-The MVP is a single decision poll product, deliberately narrow.
-
-1. **Create a poll:** a poll creator enters their email, verifies via magic link, names the poll, and adds options (with optional descriptions).
-2. **Share:** the system generates a poll URL (`/poll/{id}`) which the creator copies and distributes by whatever channel they already use.
-3. **Vote:** anyone with the link can vote anonymously. There is no login for voters. Voters enter a name in a mandatory text box (displayed with results; a self-declared label, not an identity) and rank options by assigning 1, 2, 3, ... preferences, as few or as many as they wish.
-4. **Duplicate deterrence:** MVP cannot truly prevent repeat voting; it sets a cookie after voting and declines a second ballot from the same browser.
-5. **Close:** the poll creator closes the poll manually. There is no scheduled close in the MVP. Closed polls and their results are retained indefinitely; the MVP performs no purging.
-6. **Results:** once closed, anyone with the link sees the full round-by-round count - each round's tallies, which option was eliminated and why, how votes transferred, and the final winner - rendered as an engaging, visual, plain-language explainer.
-7. **Tie handling and audit trail:** when two or more options tie for lowest score at an elimination boundary, the system eliminates one by random draw and records the draw and its order in the audit trail. Every poll mutation - creation, option edits, ballots, close, count events - appends a line to the poll's plain-text CSV/TSV audit trail.
-
-### MVP technology
-
-- Single Go binary, stdlib HTTP, htmx + vanilla JS, one CSS file.
-- Poll state stored as append-only CSV files under `STATE_DIRECTORY` (polls, options, ballots), deduplicated on read, last write wins - the same state model as meet and upload. Counting happens in memory from the CSV state.
-- Magic-link email for poll creators via the Exodan local-mail runtime contract.
-- Deploys to the Exodan fleet; the app adheres to the NixOS project-integration contract (`ADDR`, `CONFIG_PATH`, `SECRETS_PATH`, `STATE_DIRECTORY`, `config/defaults.yaml`, YAML age secrets).
-
-### What is NOT in the MVP
-
-- Voter login or email verification (roadmap: configurable closed-group mode)
-- Changing a vote after submission
-- Scheduled / timed poll closure
-- Live results during voting
-- Multi-winner PR-STV quota counting (roadmap)
-- Poll purging (roadmap: configurable; the MVP retains closed polls indefinitely)
-- Export or embeds
+The first deliverable is a single decision poll product, deliberately narrow. Its full scope, technical commitments, exclusions, and acceptance criteria are defined in [MVP.md](MVP.md).
 
 ## Roadmap
 
