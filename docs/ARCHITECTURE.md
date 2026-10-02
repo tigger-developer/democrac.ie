@@ -1,6 +1,6 @@
 ---
 title: democrac.ie - Architecture
-version: 2
+version: 3
 last-updated: 2026-10-02
 ---
 
@@ -14,17 +14,17 @@ democrac.ie is a free ranked-choice decision poll: create a poll, add options, s
 
 ## Requirements
 
-1. **Create:** a poll creator enters their email, verifies via magic link, names the poll, and adds options with optional descriptions
-2. **Share:** the system generates a poll URL the creator distributes through whatever channel they already use
+1. **Create:** a fleet operator creates the poll and its options through an application admin CLI command run by Exodan's `APP-admin` wrapper
+2. **Share:** the command prints a poll URL the operator distributes through an existing channel
 3. **Vote:** anyone with the link votes anonymously; no voter login. Voters enter a mandatory self-declared name and rank options 1, 2, 3, ... with as few or as many preferences as they wish
 4. **Duplicate deterrence:** a cookie is set after voting and a second ballot from the same browser is declined
-5. **Close:** the creator closes the poll manually
+5. **Close:** a fleet operator closes the poll through the same admin CLI; the close operation freezes ballots and records the count
 6. **Results:** after close, anyone with the link sees the round-by-round count with visualization and plain-language explanation
 7. **Audit:** every poll mutation appends to the poll's authoritative TSV event log; ties at the elimination boundary are resolved by a recorded random draw
 
 ### What is NOT required
 
-- Voter accounts, passwords, or voter email verification (roadmap: closed-group elections)
+- Browser-based poll creation or management, creator login, mail, voter accounts, passwords, or voter email verification (roadmap: self-service creation and closed-group elections)
 - Changing a ballot after submission (roadmap)
 - Timed or scheduled close (roadmap)
 - Results visible during voting (roadmap)
@@ -35,13 +35,12 @@ democrac.ie is a free ranked-choice decision poll: create a poll, add options, s
 ## Core Workflow
 
 ```
-created -> open -> closed
+open -> closed
 ```
 
-| State | What happens | Creator action |
+| State | What happens | Operator action |
 |---|---|---|
-| **created** | Poll and options defined; share URL available | Edit options, copy share URL |
-| **open** | Voters submit ballots; results hidden | Close the poll |
+| **open** | Poll and options have been created through the admin CLI; voters submit ballots and results stay hidden | Share the URL; close the poll through the admin CLI |
 | **closed** | Ballots frozen; round-by-round results visible to anyone with the link | - |
 
 ## Counting Algorithm
@@ -69,10 +68,10 @@ Standalone web application as a single Go binary, following the same pattern as 
 
 ```
 Go web server (single binary)
-  ├── routing, magic-link auth, session cookies, static files
+  ├── public ballot and results routing, duplicate-deterrence cookies, static files
   ├── per-poll TSV event log (append-only, authoritative)
   ├── in-memory PR-STV count
-  └── sendmail adapter (subprocess) - magic-link mail via local-mail contract
+  └── operator CLI subcommands for poll creation and closure
 ```
 
 No database server, no message queue, no container orchestration, no external API dependencies.
@@ -89,7 +88,7 @@ STATE_DIRECTORY/
       ... optional rebuildable or poll-owned files
 ```
 
-Each event occupies one physical TSV line with a sequence number, timestamp, event type and JSON payload separated by tabs. JSON encoding preserves tabs and newlines in names and descriptions without letting them split the record. Event types cover creation, option edits, ballot submissions, rejected duplicate attempts, closure, count rounds and draw outcomes. The ballot event contains ordered option IDs; a replay of the log reconstructs the poll and validates the recorded result.
+Each event occupies one physical TSV line with a sequence number, timestamp, event type and JSON payload separated by tabs. JSON encoding preserves tabs and newlines in names and descriptions without letting them split the record. MVP event types cover creation, ballot submissions, rejected duplicate attempts, closure, count rounds and draw outcomes. Later option edits, if supported, would append events rather than rewrite history. The ballot event contains ordered option IDs; a replay of the log reconstructs the poll and validates the recorded result.
 
 Writes to an individual poll are serialized. The close operation must commit the frozen count as a complete outcome before exposing results; if it is interrupted, recovery resumes from the existing events without generating a second draw. The exact durability and recovery protocol, including detection of an incomplete final record or count, remains to be specified before implementation. Corrections append new events rather than rewriting prior evidence.
 
@@ -100,7 +99,6 @@ Keeping all poll-owned data under one directory gives a future expiry routine a 
 ```
 poll
   ├── title
-  ├── creator_email (passwordless - authenticates via magic link)
   ├── state: created | open | closed
   ├── options[]
   │     ├── name
@@ -113,13 +111,9 @@ poll
 
 ### Access Model
 
-No passwords. No accounts. Authentication is a magic email link for poll creators only.
+The MVP has no browser administration, accounts or email login. Exodan's `APP-admin` wrapper runs one-off subcommands as the app user with the same runtime state and configuration as the service. Poll creation and closure are CLI-only operations; public HTTP routes cannot perform either mutation.
 
-**Creators:**
-1. Enter email on the create-poll page
-2. Receive a magic login link (time-limited, single-use), sent through the Exodan local-mail contract
-3. Click link -> session cookie
-4. Create and manage polls; close a poll
+**Operators:** invoke the application's create and close subcommands through the wrapper. The application owns command validation and event writes; Exodan owns the host-side operator authorization and wrapper. Browser-based self-service creation, management and magic-link login are roadmap features. The MVP's poll creation command emits an open poll with its initial options; changing options after voting begins is outside its scope.
 
 **Voters:** no authentication at all. Possession of the poll URL is the ballot access credential. After a ballot is submitted, a cookie marks the browser as having voted and further ballots from that browser are declined. The name text box is a self-declared label for display with results, not an identity or access token.
 
@@ -143,9 +137,7 @@ The rendering is server-side HTML plus progressive enhancement (vanilla JS): the
 | **State store** | One append-only TSV event log per UUID-named poll directory under `STATE_DIRECTORY` | One authoritative history; no dual-write state/audit mismatch |
 | **Counting** | In-memory Go at close | Freeze the count once; replay verifies ballots and recorded draws |
 | **Frontend** | htmx + vanilla JS + one CSS file | Minimal complexity; one responsive stylesheet for phone, tablet, desktop |
-| **Auth** | Passwordless magic email links (creators only) | No passwords; email is the sole authentication factor; session cookies for persistence |
-| **Token signing** | Go `crypto/hmac` + `crypto/sha256` | Time-limited signed tokens for magic links; no external dependency |
-| **Email** | Exodan local-mail contract (`SENDMAIL_PATH`) | The app never configures SMTP or holds provider credentials |
+| **Administration** | One-off Go CLI subcommands via Exodan `APP-admin` | No browser login or mail dependency in the MVP; host operator privileges gate commands |
 
 ## Infrastructure and Hosting
 
@@ -153,19 +145,20 @@ Deployment, infrastructure, and the release pipeline are managed by the separate
 
 The app adheres to the NixOS project-integration contract:
 
-- Runtime environment is supplied entirely through environment variables: `ADDR`, `DEFAULT_CONFIG_PATH`, `CONFIG_PATH`, `SECRETS_PATH`, `STATE_DIRECTORY`, and (with the local-mail capability) `SENDMAIL_PATH`, `MAIL_DEFAULT_SENDER_PATH`, `MAIL_DEFAULT_SENDER_DOMAIN`
-- `config/defaults.yaml` declares `base_url` and `service.capabilities.local_mail: true`
+- Runtime environment is supplied through environment variables: `ADDR`, `DEFAULT_CONFIG_PATH`, `CONFIG_PATH`, `STATE_DIRECTORY`, and `SECRETS_PATH` only if secrets are needed
+- `config/defaults.yaml` declares `base_url`; the MVP does not request `local_mail`
 - `config/<host>.yaml` exists per target host
-- Secrets are YAML under `secrets/<host>.yaml.age`
+- Any later required secrets use YAML under `secrets/<host>.yaml.age`; the MVP does not require a login-signing secret
 - The binary binds only to `ADDR`; Caddy is the only internet-exposed process
-- A `democrac-admin` CLI wrapper is exposed for one-off operations (e.g. generating a creator login link)
+- The Exodan-generated `APP-admin` wrapper invokes application-owned create and close subcommands with the application identity and runtime contract; the exact wrapper name follows the deployed app identity
 - The Makefile has local dev targets only (`build`, `test`, `lint`, `install`)
 - No port choice, systemd units, timers, DNS, or host-side files are owned by this repo
 
-Mail requirements are modest: magic-link messages to poll creators only. The local-mail adapter's 10 MiB message limit and 50-recipient cap are irrelevant at this volume; the app builds complete RFC messages and owns the From header, using the sender patterns the mail contract prescribes.
+Future browser-based creator access may use Exodan's optional local-mail capability. It is not needed for the MVP CLI workflow.
 
 Backup, process supervision, health checks, and TLS are owned by the Exodan fleet.
 
 ## Document Changelog
 
+- **Version 3:** Replaced MVP creator login and browser management with Exodan-style admin CLI creation and closure; deferred mail and creator authentication. Created polls open with their initial options.
 - **Version 2:** Replaced separate last-write-wins CSV state and audit files with one authoritative TSV event stream per UUID-named poll directory; specified count freeze on close and recorded random-source evidence. Interrupted-close recovery remains an explicit design question.

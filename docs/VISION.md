@@ -1,6 +1,6 @@
 ---
 title: democrac.ie - Vision
-version: 6
+version: 7
 last-updated: 2026-10-02
 ---
 
@@ -24,7 +24,7 @@ democrac.ie is a free, open-source way to make a decision together with your fri
 
 - **Free to use.** No paywalls, no vote-count limits, no feature tiers. Anyone can create a poll and anyone can vote.
 - **One web app, one stylesheet.** A single responsive site that delivers a high-fidelity experience on phone, tablet, and desktop. No separate mobile site, no app.
-- **Passwordless.** The site follows the same magic-link login pattern as the rest of the fleet: enter an email address, receive a time-limited login link, click, done. No passwords, no accounts to manage.
+- **Passwordless.** When self-service poll creation arrives, it follows the fleet's magic-link login pattern: enter an email address, receive a time-limited login link, click, done. The initial operator-only creation workflow needs no browser login.
 - **Explain the result, not just announce it.** Results are presented as a round-by-round story: round one tallies, the lowest-scoring option eliminated, votes transferred, next round tallies, and so on until a winner emerges - complete with a clear visualization and a plain-language explainer of what happened to each ballot.
 - **Accessible.** Device friendly, screen-reader friendly, plain language.
 - **Auditable.** Every count is reproducible from the recorded ballots. Ties between options at the elimination boundary are resolved by a random draw, and the draw - including what was drawn and in what order - is recorded in the poll's audit trail. Every state mutation appends to the audit trail, and the audit trail is plain-text TSV.
@@ -37,6 +37,7 @@ The first deliverable is a single decision poll product, deliberately narrow. It
 
 Each item is a candidate for later phases, configurable by the poll creator where noted.
 
+- **Self-service creation and administration:** a browser poll builder and creator management view, with passwordless magic-link login and email delivery; creation and closure need not remain operator tasks.
 - **Change vote:** creators may allow voters to revise their ballot while the poll is open.
 - **Timed close:** creators may set a fixed close time instead of closing manually.
 - **Live results visibility:** creators choose whether tallies are visible during voting or only after close. Default remains after close, to avoid strategic ranking.
@@ -50,4 +51,5 @@ Apache 2.0
 
 ## Document Changelog
 
+- **Version 7:** Deferred browser poll creation and passwordless creator access to the roadmap; the MVP uses an operator CLI.
 - **Version 6:** Clarified that the poll audit trail uses TSV; the per-poll storage design belongs in the architecture.
