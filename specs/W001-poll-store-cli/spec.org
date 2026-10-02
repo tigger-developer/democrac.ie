@@ -1,0 +1,203 @@
+#+TITLE: W001 - Create and inspect open polls through the operator CLI
+#+SCHEMA: 8
+#+SUBTITLE: Unified change specification
+#+STARTUP: overview
+#+OPTIONS: toc:2 num:nil
+#+OPERATOR_SIGNOFF: PENDING
+
+* Synopsis
+:PROPERTIES:
+:CUSTOM_ID: summary
+:END:
+** Outcome
+- An *operator creates an open poll* using the Exodan-style admin CLI and receives a share URL.
+** Before
+- The project has *documentation only*, without a deployable service or poll store.
+** After
+- A *single TSV event log per UUID-named poll* is authoritative for its title, options and state.
+- The CLI *creates and inspects* polls without a public administration route.
+** Changes
+- Introduce the *Go binary*, runtime configuration, operator commands, read-only poll display and state-store foundation.
+** Unchanged
+- *Exodan owns* deployment, service identity, wrapper authorization and TLS; ballot submission and counting belong to later work.
+** Edge cases
+:PROPERTIES:
+:CUSTOM_ID: synopsis-edge-cases
+:END:
+- *Invalid input or interrupted creation* cannot publish a partial poll; corrupt state fails closed.
+** Decisions
+- *One physical TSV line per event* with JSON payload; *no separate state database*.
+** Next step
+- Definition review and operator sign-off precede implementation.
+
+-----
+* Context
+:PROPERTIES:
+:CUSTOM_ID: context
+:END:
+** Problem
+- The MVP needs poll creation without building creator login, mail or browser administration.
+** Outcome
+- An authorized host operator can create an open poll with initial choices and obtain its URL; a voter can read that poll.
+** Scope
+*** In scope
+- Go executable, local build/test/lint/vulncheck entry points, Exodan-compatible configuration, event-store library, create/show CLI, public read-only ballot page.
+*** Out of scope
+- Ballot submission, duplicate deterrence, close/count/results, option edits, browser administration, mail, deployment execution.
+*** Unchanged
+- Exodan provides the =APP-admin= wrapper, operator authorization, host identity, bind address and reverse proxy.
+** Authority and starting point
+- Project profile :: [[file:../../.sdlc/project.yaml][Project SDLC profile]]
+- Product authority :: [[file:../../docs/MVP.md][MVP scope]], [[file:../../docs/VISION.md][Vision]]
+- Architecture authority :: [[file:../../docs/ARCHITECTURE.md][Proposed architecture]]
+- External contract :: Exodan =deploy/docs/PROJECT-INTEGRATION.md=, sections on the admin wrapper, runtime, config and data directories (read-only authority).
+- Implementation :: No existing application code or regression suite.
+** Constraints and dependencies
+:PROPERTIES:
+:CUSTOM_ID: constraints-and-dependencies
+:END:
+- Use =STATE_DIRECTORY/polls/<uuid>/events.tsv= with UTF-8 records and JSON payload; no direct writes outside app state.
+- Supply =config/defaults.yaml= with =base_url= and =data_dirs: [templates, static]=; deployment-specific =config/<host>.yaml= is required when a host is selected, not invented for an unknown target.
+- Bound poll creation to 2–200 options, a 200-character title, 200-character option names and 2,000-character descriptions; trim surrounding whitespace and reject empty or duplicate normalized names.
+- Serve bundled =templates/= and =static/= from the app working directory declared in =data_dirs=. No email or Node.js/npm dependency.
+- This work must land before ballot and close/count tickets; those consume its reader, writer and CLI entry point.
+** Decisions
+- A newly created poll is *open immediately* and its options cannot change in the MVP.
+- Store format version, monotonic sequence, UTC timestamp, event type and JSON payload per line; event replay rejects gaps and malformed complete records.
+** Unresolved blockers
+- None for definition; the target deployment host and domain are operator-selected at deployment, not guessed here.
+* Acceptance Criteria
+:PROPERTIES:
+:CUSTOM_ID: acceptance-criteria
+:END:
+** AC001.1 - Valid operator creation yields an open poll :ac:
+:PROPERTIES:
+:CUSTOM_ID: ac-001-1
+:END:
+- Criterion :: Given a valid title and at least two distinct non-empty options, the CLI *creates one open poll* and prints its URL based on configured =base_url=.
+- Proven by :: [[#rt-001-1][RT001.1 - Create and read a poll]].
+** AC001.2 - Invalid creation does not publish state :ac:
+:PROPERTIES:
+:CUSTOM_ID: ac-001-2
+:END:
+- Criterion :: Missing or invalid title, options, URL or state root produces an actionable failure with *no visible partial poll*.
+- Proven by :: [[#rt-001-2][RT001.2 - Reject invalid creation]].
+** AC001.3 - Poll state replays from one audit log :ac:
+:PROPERTIES:
+:CUSTOM_ID: ac-001-3
+:END:
+- Criterion :: A poll directory has *one authoritative append-only TSV log*, from which creation and options are replayable across process restarts; malformed complete records are rejected, not silently skipped.
+- Proven by :: [[#rt-001-3][RT001.3 - Replay and reject corrupt history]].
+** AC001.4 - HTTP is read-only until voting arrives :ac:
+:PROPERTIES:
+:CUSTOM_ID: ac-001-4
+:END:
+- Criterion :: An existing open poll displays its title and choices through its share URL; HTTP offers *no creation or administration mutation*.
+- Proven by :: [[#rt-001-4][RT001.4 - Public read boundary]].
+** AC001.5 - Exodan application contract is respected :ac:
+:PROPERTIES:
+:CUSTOM_ID: ac-001-5
+:END:
+- Criterion :: The executable accepts the Exodan runtime configuration and serves only on =ADDR=; the one-off CLI uses the same state location without direct host paths or a project-owned deployment action.
+- Proven by :: [[#rt-001-5][RT001.5 - Environment and CLI boundary]] and [[#ot-001-1][OT001.1 - Build and package check]].
+* Test Definitions
+:PROPERTIES:
+:CUSTOM_ID: test-definitions
+:END:
+** RT001.1 - Create and read a poll :testdef:
+:PROPERTIES:
+:CUSTOM_ID: rt-001-1
+:END:
+- Covers :: [[#ac-001-1][AC001.1 - Valid operator creation yields an open poll]].
+- Boundary :: Executable CLI plus HTTP listener using an isolated temporary state root.
+- Action :: Create a poll with two options and description text containing commas, tabs and line breaks; request the printed URL.
+- Expected :: One valid URL and UUID poll directory; HTTP displays the exact title and option descriptions without exposing storage markup.
+** RT001.2 - Reject invalid creation :testdef:
+:PROPERTIES:
+:CUSTOM_ID: rt-001-2
+:END:
+- Covers :: [[#ac-001-2][AC001.2 - Invalid creation does not publish state]].
+- Boundary :: CLI and temporary state directory.
+- Action :: Attempt empty or over-200-character title, fewer than two or more than 200 options, over-200-character option names, over-2,000-character description, repeated names including names differing only by surrounding whitespace, malformed =base_url=, and unwritable state.
+- Expected :: Non-zero status and useful stderr; no share URL or readable half-created poll.
+** RT001.3 - Replay and reject corrupt history :testdef:
+:PROPERTIES:
+:CUSTOM_ID: rt-001-3
+:END:
+- Covers :: [[#ac-001-3][AC001.3 - Poll state replays from one audit log]].
+- Boundary :: Create CLI, fresh process, event-log reader.
+- Action :: Create, reopen and inspect a poll; separately damage a complete record or sequence in a test copy.
+- Expected :: Exact choices survive restart; corrupt complete history fails explicitly rather than yielding a plausible poll.
+** RT001.4 - Public read boundary :testdef:
+:PROPERTIES:
+:CUSTOM_ID: rt-001-4
+:END:
+- Covers :: [[#ac-001-4][AC001.4 - HTTP is read-only until voting arrives]].
+- Boundary :: HTTP request and response.
+- Action :: Read a valid/unknown poll, then submit create/close requests to public paths.
+- Expected :: Only the valid poll is displayed; unknown poll is not found and mutation requests do not create or close anything.
+** RT001.5 - Environment and CLI boundary :testdef:
+:PROPERTIES:
+:CUSTOM_ID: rt-001-5
+:END:
+- Covers :: [[#ac-001-5][AC001.5 - Exodan application contract is respected]].
+- Boundary :: Executable with temporary defaults, host override and state paths.
+- Action :: Invoke CLI and server with env-supplied paths; check =-h=, =--help=, =--version=. Load a config containing valid Exodan-owned =data_dirs=, =extra_domains=, =timers= or =service= alongside =base_url=, then load one with an unknown top-level key.
+- Expected :: Correct URL and state root; loopback =ADDR= respected, missing required runtime inputs fail, help/version have no side effects. Valid Exodan-owned keys coexist without altering app semantics; unknown key fails with a precise error.
+** OT001.1 - Build and package check :testdef:
+:PROPERTIES:
+:CUSTOM_ID: ot-001-1
+:END:
+- Covers :: [[#ac-001-5][AC001.5 - Exodan application contract is respected]].
+- Boundary :: Local cross-compiled artefact and Exodan integration contract.
+- Procedure :: Build Linux amd64 binary once; inspect config and asset packaging against Exodan contract without deploying.
+- Expected :: Artefact builds; no invented host paths, service units, deploy targets or local-mail requirement.
+- Bounds :: One local check; no SSH, live fleet changes or provider calls.
+* Edge Cases
+:PROPERTIES:
+:CUSTOM_ID: edge-cases
+:END:
+** Incomplete initial write
+- Condition :: Process exits while the initial poll record is being written.
+- Required behaviour :: Poll is not published and its directory is not treated as a valid poll; subsequent creation can use another UUID.
+- Covered by :: [[#ac-001-3][AC001.3 - Poll state replays from one audit log]] and [[#rt-001-3][RT001.3 - Replay and reject corrupt history]]. Implementation review checks private write, durable initial record and atomic publication.
+* Solution Design
+:PROPERTIES:
+:CUSTOM_ID: solution-design
+:END:
+** Architecture context
+- Relevant components :: New binary, per-poll event store, HTTP renderer; [[file:../../docs/ARCHITECTURE.md][proposed architecture]].
+- Ownership boundary :: Application owns validation and event state; Exodan owns deployment and operator wrapper.
+** High-level design
+*** Components and responsibilities
+- A shared store validates UUID poll paths, serializes and persists complete events, then replays them to a read model. CLI and HTTP consume that same read model.
+- CLI create accepts title and repeated options, with an input file for multiline descriptions using a documented structured format; prints the canonical URL only after durable creation. CLI show reads state without mutation.
+- HTTP GET uses =html/template= escaping; serving bind is =ADDR=, config comes from =DEFAULT_CONFIG_PATH= and =CONFIG_PATH=, mutable data from =STATE_DIRECTORY=.
+*** Interfaces and configuration
+- CLI contract :: =democrac create --title TITLE --option NAME [--option NAME ...]= for simple names; =--input FILE= is a UTF-8 YAML document with =title= and =options= (each =name= and optional =description=). Exactly one mode per invocation. =democrac show POLL_UUID= displays the canonical share URL and poll state. Binary also provides =serve=.
+- Runtime :: Config =base_url= is absolute HTTPS in production, localhost HTTP in local tests. The application reads =base_url=; Exodan-owned =data_dirs=, =extra_domains=, =timers=, =service= and legacy =exec_args= may coexist in those YAML files but are not application settings. Reject other unrecognized top-level keys and invalid structures for known keys; do not reinterpret Exodan-owned fields. =ADDR= is mandatory in service mode; the CLI requires state and configuration, not =ADDR=.
+- Event record :: =version<TAB>sequence<TAB>timestamp<TAB>type<TAB>payload_json<LF>=. Version begins at 1. A JSON encoder escapes literal tabs and newlines; parsing checks exact column count, type and monotonic sequence. Creation is one event containing title and the ordered options with stable IDs, so an incomplete creation is never published.
+*** Failure behaviour
+- Write each complete event with an exclusive per-poll lock and confirm durability before success. Creation writes to a new UUID directory privately and publishes it atomically by renaming into =polls/= only once the initial record and directory are durable; readers ignore unpublished staging directories. Review must confirm this publish boundary. A trailing incomplete record blocks subsequent writes and reads that would present a valid result. Recovery means an operator retains the damaged directory for forensic inspection and restores a valid backup or creates a new poll; no automatic truncation or repair of the append-only log is allowed.
+*** Simplicity and proportionality
+- One Go binary and one event log per poll avoid a relational store and dual-write audit. No mail, host script or browser admin.
+** Design decisions and verification
+*** Single authoritative history
+- Decision :: The event stream is the sole poll authority, with derived read models only.
+- Verification :: [[#rt-001-3][RT001.3 - Replay and reject corrupt history]]; implementation review checks that no second mutable state source is introduced.
+** Architecture impact
+*** Security impact
+- Threat boundary :: Public HTTP can only read polls; CLI mutation is restricted by host operator wrapper.
+- Data and secrets :: User-entered labels and descriptions are untrusted; do not log raw values. Private poll files are accessible to app identity, not directly served as static files.
+- Access :: No HTTP mutation endpoints for creation/closure. Generated IDs are validated before filesystem lookup to prevent traversal.
+- Conclusion :: Fail closed on invalid state; HTML-escape display fields and keep admin mutation outside HTTP.
+* Delivery Handoff
+:PROPERTIES:
+:CUSTOM_ID: delivery-handoff
+:END:
+- Required reading :: [[file:../../docs/MVP.md][MVP scope]], [[file:../../docs/ARCHITECTURE.md][Architecture]], Exodan =deploy/docs/PROJECT-INTEGRATION.md=.
+- Entry conditions :: Effective definition audit and explicit operator sign-off; confirm Exodan contract and no overlapping worktree changes.
+- First implementation step :: Write [[#rt-001-1][RT001.1 - Create and read a poll]] as an executable failing regression before target production behaviour.
+- Definition evidence :: =audits.yaml= (harness-owned).
+- Validation evidence :: =validation.org= at delivery admission.
+- Documentation impact :: Update =README.md= with actual CLI quickstart and local prerequisites; reconcile =docs/ARCHITECTURE.md= after implementation.

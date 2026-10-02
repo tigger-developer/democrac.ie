@@ -1,0 +1,291 @@
+version: 1
+audits:
+    - work_item: W003
+      gate: definition
+      session_id: 20261003_001012_719b4f
+      harness: hermes
+      provider: nous
+      model: z-ai/glm-5.3
+      configured:
+        harness: claude
+        model: claude-sonnet-5.5
+      external_round: 3
+      status: passed
+      updated: "2026-10-02T23:23:07Z"
+      revision: revised submission (W001 spec.org updated; docs/ARCHITECTURE.md updated to version 5; W002, W003 and all other evidence unchanged)
+      verdict: PASS
+      response: |-
+        GATE: definition
+        REVISION: revised submission (W001 spec.org updated; docs/ARCHITECTURE.md updated to version 5; W002, W003 and all other evidence unchanged)
+
+        VERDICT: PASS
+
+        Review of changed evidence
+        - W001 RT001.2 now enumerates the concrete limit cases (over-200-character title, >200 options, over-200-character names, over-2,000-character descriptions, whitespace-only duplicate names) matching the constraints section exactly — the documented limits are now testable at the CLI boundary.
+        - W001 RT001.5 now exercises both sides of the config coexistence rule: valid Exodan-owned keys (=data_dirs=, =extra_domains=, =timers=, =service=) accepted without semantic effect, and an unknown top-level key rejected with a precise error. This matches the runtime design decision and closes the loop between the design and its verification.
+        - docs/ARCHITECTURE.md version 5 records the torn-record fail-closed recovery decision in the changelog, consistent with the W001/W003 specifications and with DOCUMENTATION.md's versioning and changelog rules.
+        - Unchanged W002/W003 evidence was previously fully reviewed and remains in context; the W001 changes do not alter their interpretation (the shared store contract, =poll_closed_started= boundary and recovery protocol they reference are unchanged in substance).
+
+        Standing checks
+        - No annotation records or blocks in any spec.org; no feedback.yaml supplied (none required). No audit findings, statuses, revisions or session identity duplicated in the specifications. OPERATOR_SIGNOFF correctly remains PENDING.
+        - Full AC↔RT/UT/OT traceability intact across all three specs; tests remain at real user boundaries; no source-text tests, no invented simulations; security impact present in all three designs; scope, proportionality and classification unchanged and compliant.
+
+        No prior findings outstanding; no new findings. Definition sign-off may proceed.
+      history:
+        - diagnostic: /Users/tigger/code/tigoss/democrac.ie/.sdlc/audit-diagnostics/audit-24448452.log
+          cache_key: sha256:99ef655c9fd1a89a05e470d514db4f47fe9b9323bdee949bef9fdc7da46140b8
+          session_id: 20261003_001012_719b4f
+          harness: hermes
+          provider: nous
+          model: z-ai/glm-5.3
+          evidence:
+            - path: /Users/tigger/.agents/sdlc/ARCHITECTURE.md
+              sha256: bd7a66ffd967010eefb8dc7abe64b059994c7b0f44ed5f5c30ec73e354f5b7f7
+              bytes: 8154
+            - path: /Users/tigger/.agents/sdlc/CODING.md
+              sha256: a69a5d3b7ce3604b093703d72ab0de1bb6d607f140baab17292d209054fe902f
+              bytes: 13502
+            - path: /Users/tigger/.agents/sdlc/DOCUMENTATION.md
+              sha256: d8696dca9f4ed75cc8487e064a8c6756a418bbe623e55bcde0bc58996b011c9c
+              bytes: 7652
+            - path: /Users/tigger/.agents/sdlc/ISSUES.md
+              sha256: 66982ab8b25b26ea1bfaf40577bf4955bf0c804cfd035ab582c6d9ff658e2581
+              bytes: 16627
+            - path: /Users/tigger/.agents/sdlc/ORG-SCHEMA.md
+              sha256: 4c93e9ebfd051a1caa3a3a456ef20228c4403f3ca00726ed1ac4c93676ac26cc
+              bytes: 4915
+            - path: /Users/tigger/.agents/sdlc/ORGMODE.md
+              sha256: baffdd38fac0c2dd24d2be5389edb2a0b88ea19e8d67e1bc2f6f65d55601b7b3
+              bytes: 2974
+            - path: /Users/tigger/.agents/sdlc/SECURITY.md
+              sha256: fbceb4dffd2ab69a3edcd1dd924873bdbe5298cffa4c2e65548e04541fb78f73
+              bytes: 5027
+            - path: /Users/tigger/.agents/sdlc/TESTING.md
+              sha256: 1a0d1296b6ec080c7c86b24713c4976a7eb6f9fab7071e2369ce2038baaad4f9
+              bytes: 16346
+            - path: /Users/tigger/.agents/sdlc/technologies/GO.md
+              sha256: 63a41c24322b2c4144367b69777528b023a30222593c462b0696df98b1967917
+              bytes: 7301
+            - path: /Users/tigger/.agents/sdlc/technologies/JAVASCRIPT.md
+              sha256: bdd055c0f688a752dd6e452da385a583c2c875be7249ece0bfd8200f33809acb
+              bytes: 7508
+            - path: /Users/tigger/.agents/sdlc/technologies/WEB.md
+              sha256: c474f4646fae1e318c78c18b68cfe75d7100b2b7dd85d8ad264326fa375bc000
+              bytes: 10423
+            - path: /Users/tigger/code/tigoss/democrac.ie/.sdlc/project.yaml
+              sha256: ae174d8a62862168caa071e9b03f34c7200221db9c8a9f260be757a2d9c07d17
+              bytes: 520
+            - path: /Users/tigger/code/tigoss/democrac.ie/docs/ARCHITECTURE.md
+              sha256: a33b9973a90d025b7229beb0a9477ab6870150a9d9ccfc198306b627429f63e9
+              bytes: 12119
+            - path: /Users/tigger/code/tigoss/democrac.ie/docs/MVP.md
+              sha256: 91a1661becf3ef280926c94a9cd1b59ba8e4725fcbce9e89f133ba44e84e128a
+              bytes: 6480
+            - path: /Users/tigger/code/tigoss/democrac.ie/docs/VISION.md
+              sha256: 80f1219bc279d82fb5c8c8a245b1ad216dc05f0362ec71c4fc6d68af9180c095
+              bytes: 4755
+            - path: /Users/tigger/code/tigoss/democrac.ie/docs/work.org
+              sha256: 00298af7c1b4059bafee5be8a46983e6d3f266b78cb7b6f7cc0bf83064f0d1bf
+              bytes: 4981
+            - path: /Users/tigger/code/tigoss/democrac.ie/specs/W001-poll-store-cli/spec.org
+              sha256: bc59010683af20771a780cd79110a1f202c75ad277b45c251dcdb228a3eff534
+              bytes: 13052
+            - path: /Users/tigger/code/tigoss/democrac.ie/specs/W002-anonymous-ballot/spec.org
+              sha256: d2eec05be277b4666905579a4de641579e41a94b3facd9782b4e2ba2e8233888
+              bytes: 13381
+            - path: /Users/tigger/code/tigoss/democrac.ie/specs/W003-close-count-results/spec.org
+              sha256: 0e587fc102fb7ad6b4c571725d2d231dd35210a3eb69a63f15299a6e41a4921c
+              bytes: 16319
+          round: 1
+          revision: initial submission (no revision identifier supplied; specs W001, W002, W003 as one package)
+          verdict: PROVISIONAL PASS
+          response: |-
+            GATE: definition
+            REVISION: initial submission (no revision identifier supplied; specs W001, W002, W003 as one package)
+
+            VERDICT: PROVISIONAL PASS
+
+            Summary of review
+            - No annotation records or blocks in any spec.org; no feedback.yaml supplied (none required). No audit findings, statuses, revisions or session identity duplicated in the specifications. OPERATOR_SIGNOFF: PENDING is correct pre-approval metadata, not audit state.
+            - Voice and document purpose comply with DOCUMENTATION.md: impersonal, factual, concise approval metadata, no conversation narration or personal attribution.
+            - Traceability is complete: every AC in W001 (5), W002 (6), W003 (7) is proven by linked RTs; every RT links back to its ACs; UT/OT definitions are present and classified appropriately (W001 OT001.1 bounded local build check; W002/W003 UTs for human visual/accessibility judgement that automation cannot honestly cover). Tests use real user boundaries (executable CLI, HTTP requests, served HTML, event log) — no source-text grepping, no invented third-party simulations. TDD sequencing is stated in each handoff (first failing RT before production behaviour).
+            - Design proportionality: single Go binary, one TSV event log per poll, shared per-poll lock across server and CLI, no database or extra moving parts. No template inflation, no mechanisms added merely to fill sections; security impact is present and substantive in all three specs. Scope matches the operator-authorized work items in work.org; no behaviour beyond MVP.md/VISION.md/ARCHITECTURE.md.
+            - Cross-spec consistency verified: majority threshold floor(active/2)+1, tie-draw recording, zero-ballot no-winner, frozen count, cookie-as-deterrence, and the W001→W002→W003 dependency chain all agree with the architecture authority. RT003.6's interrupted-close retry is feasible via replay-to-last-complete-event as designed.
+
+            Findings (bounded, reversible follow-up; do not invalidate sign-off)
+            1. Incomplete-trailing-record recovery is referenced but undefined. W001 design says a trailing incomplete record "blocks further writes pending explicit recovery" without defining that recovery (operator action, tool, or rule), and W003 failure behaviour defers to "the W001 recovery protocol". The architecture authority also flags this as an open design question. Required follow-up: define the concrete recovery mechanism for a partial trailing event line in the W001 design (and W003's dependence on it) before implementation reaches that path. This is a named significant decision currently left for the delivery agent to invent, but it is isolated, reversible, and does not undermine the overall structure.
+            2. W001 defers exact title/option count and text size limits to delivery ("must be recorded before delivery, not treated as unlimited"). Acceptable as a routine bounded detail, but the concrete limits must be recorded in the delivery plan or spec before the input-validation RTs are written, since RT002.2 depends on a "documented limit".
+
+            Neither finding authorizes scope expansion; both are documentation-of-decision work within the approved design. No FAIL-condition violations (no violated requirement, approved decision, standard, or concrete correctness/security defect identified).
+          updated: "2026-10-02T23:10:11Z"
+        - diagnostic: /Users/tigger/code/tigoss/democrac.ie/.sdlc/audit-diagnostics/audit-1008600309.log
+          cache_key: sha256:1b803c066e4b91a6c090646716dd69e928b6064a4755587bca6f78092701c84e
+          session_id: 20261003_001012_719b4f
+          harness: hermes
+          provider: nous
+          model: z-ai/glm-5.3
+          evidence:
+            - path: /Users/tigger/.agents/sdlc/ARCHITECTURE.md
+              sha256: bd7a66ffd967010eefb8dc7abe64b059994c7b0f44ed5f5c30ec73e354f5b7f7
+              bytes: 8154
+            - path: /Users/tigger/.agents/sdlc/CODING.md
+              sha256: a69a5d3b7ce3604b093703d72ab0de1bb6d607f140baab17292d209054fe902f
+              bytes: 13502
+            - path: /Users/tigger/.agents/sdlc/DOCUMENTATION.md
+              sha256: d8696dca9f4ed75cc8487e064a8c6756a418bbe623e55bcde0bc58996b011c9c
+              bytes: 7652
+            - path: /Users/tigger/.agents/sdlc/ISSUES.md
+              sha256: 66982ab8b25b26ea1bfaf40577bf4955bf0c804cfd035ab582c6d9ff658e2581
+              bytes: 16627
+            - path: /Users/tigger/.agents/sdlc/ORG-SCHEMA.md
+              sha256: 4c93e9ebfd051a1caa3a3a456ef20228c4403f3ca00726ed1ac4c93676ac26cc
+              bytes: 4915
+            - path: /Users/tigger/.agents/sdlc/ORGMODE.md
+              sha256: baffdd38fac0c2dd24d2be5389edb2a0b88ea19e8d67e1bc2f6f65d55601b7b3
+              bytes: 2974
+            - path: /Users/tigger/.agents/sdlc/SECURITY.md
+              sha256: fbceb4dffd2ab69a3edcd1dd924873bdbe5298cffa4c2e65548e04541fb78f73
+              bytes: 5027
+            - path: /Users/tigger/.agents/sdlc/TESTING.md
+              sha256: 1a0d1296b6ec080c7c86b24713c4976a7eb6f9fab7071e2369ce2038baaad4f9
+              bytes: 16346
+            - path: /Users/tigger/.agents/sdlc/technologies/GO.md
+              sha256: 63a41c24322b2c4144367b69777528b023a30222593c462b0696df98b1967917
+              bytes: 7301
+            - path: /Users/tigger/.agents/sdlc/technologies/JAVASCRIPT.md
+              sha256: bdd055c0f688a752dd6e452da385a583c2c875be7249ece0bfd8200f33809acb
+              bytes: 7508
+            - path: /Users/tigger/.agents/sdlc/technologies/WEB.md
+              sha256: c474f4646fae1e318c78c18b68cfe75d7100b2b7dd85d8ad264326fa375bc000
+              bytes: 10423
+            - path: /Users/tigger/code/tigoss/democrac.ie/.sdlc/project.yaml
+              sha256: ae174d8a62862168caa071e9b03f34c7200221db9c8a9f260be757a2d9c07d17
+              bytes: 520
+            - path: /Users/tigger/code/tigoss/democrac.ie/docs/ARCHITECTURE.md
+              sha256: 7bd773485762944d0ffdf23757b2e5cbef4f029d35029efcff5ba952fe18e36c
+              bytes: 12182
+            - path: /Users/tigger/code/tigoss/democrac.ie/docs/MVP.md
+              sha256: 91a1661becf3ef280926c94a9cd1b59ba8e4725fcbce9e89f133ba44e84e128a
+              bytes: 6480
+            - path: /Users/tigger/code/tigoss/democrac.ie/docs/VISION.md
+              sha256: 80f1219bc279d82fb5c8c8a245b1ad216dc05f0362ec71c4fc6d68af9180c095
+              bytes: 4755
+            - path: /Users/tigger/code/tigoss/democrac.ie/docs/work.org
+              sha256: 00298af7c1b4059bafee5be8a46983e6d3f266b78cb7b6f7cc0bf83064f0d1bf
+              bytes: 4981
+            - path: /Users/tigger/code/tigoss/democrac.ie/specs/W001-poll-store-cli/spec.org
+              sha256: 8effbe5d15c3c2636b6c585600c73079737a2df53b910691cc365604e7fe88ea
+              bytes: 13791
+            - path: /Users/tigger/code/tigoss/democrac.ie/specs/W002-anonymous-ballot/spec.org
+              sha256: 98cd62bc05a187d8fe023a2ce02123f846c87f8f19cae96c78650efe0cb5d9cb
+              bytes: 13931
+            - path: /Users/tigger/code/tigoss/democrac.ie/specs/W003-close-count-results/spec.org
+              sha256: 6e69484c54c2311da44d4af8a8249b2f94e3a1ad3dc367475ecfc09005c3281e
+              bytes: 16692
+          round: 2
+          revision: revised submission (W001, W002, W003 spec.org updated; docs/ARCHITECTURE.md updated; all other evidence unchanged)
+          verdict: PASS
+          response: |-
+            GATE: definition
+            REVISION: revised submission (W001, W002, W003 spec.org updated; docs/ARCHITECTURE.md updated; all other evidence unchanged)
+
+            VERDICT: PASS
+
+            Resolution of prior findings
+            1. Incomplete-trailing-record recovery — resolved. W001 now defines the protocol: a torn record fails closed for both writes and reads; recovery is operator retention of the damaged directory for inspection plus restoration from a verified backup or creation of a replacement poll; no automatic truncation or repair. The atomic private-then-rename publication of new poll directories and the required implementation-review check are stated. W003's failure behaviour and RT003.6 (including the torn-record case) now align with this protocol, and the architecture authority's interrupted-close/recovery text was updated to match. No significant decision remains for the delivery agent to invent.
+            2. Input limits — resolved. W001 now records concrete bounds (2–200 options, 200-character title, 200-character option names, 2,000-character descriptions, whitespace trimming, normalized-duplicate rejection), making RT002.2's "documented limit" case well-defined.
+
+            Re-review of changed evidence
+            - W001: added =data_dirs= constraint with correct handling of Exodan-owned config keys (coexistence, not rejection) — a sound bounded-boundary decision consistent with the external contract. Edge-case coverage link corrected to AC001.3/RT001.3 with an explicit implementation-review check; traceability remains complete.
+            - W002: AC002.4/RT002.4 reframed around the =poll_closed_started= event boundary, injected through the store rather than the W003 CLI — this removes the earlier cross-ticket coupling (W002 no longer depends on undelivered W003 behaviour) while preserving the race condition coverage under the shared lock. Coherent division: W002 owns the boundary semantics, W003 owns the operator command.
+            - W003: AC003.7 and RT003.6 now distinguish intact-log retry (resumes with recorded draws) from torn-record failure (operator recovery), matching the W001 protocol. No contradiction with the architecture authority, which was updated in the same direction.
+            - No annotation records or blocks in any spec.org; no feedback.yaml supplied (none required). No audit findings, statuses, revisions or session identity duplicated in the specifications. OPERATOR_SIGNOFF remains PENDING, correctly.
+            - Scope, proportionality and test classification re-checked against the unchanged standards: no over-engineering, no template inflation, security impact present in all three specs, tests remain at real user boundaries with no source-text grepping or invented simulations.
+
+            Both prior findings are remediated within the approved design; no new findings. Definition sign-off may proceed.
+          updated: "2026-10-02T23:16:45Z"
+        - diagnostic: /Users/tigger/code/tigoss/democrac.ie/.sdlc/audit-diagnostics/audit-2152167141.log
+          cache_key: sha256:0d537e8e27608371ccd22ed0e5b3ef91cb245ab4aa5e428faff18e491d3b60f9
+          session_id: 20261003_001012_719b4f
+          harness: hermes
+          provider: nous
+          model: z-ai/glm-5.3
+          evidence:
+            - path: /Users/tigger/.agents/sdlc/ARCHITECTURE.md
+              sha256: bd7a66ffd967010eefb8dc7abe64b059994c7b0f44ed5f5c30ec73e354f5b7f7
+              bytes: 8154
+            - path: /Users/tigger/.agents/sdlc/CODING.md
+              sha256: a69a5d3b7ce3604b093703d72ab0de1bb6d607f140baab17292d209054fe902f
+              bytes: 13502
+            - path: /Users/tigger/.agents/sdlc/DOCUMENTATION.md
+              sha256: d8696dca9f4ed75cc8487e064a8c6756a418bbe623e55bcde0bc58996b011c9c
+              bytes: 7652
+            - path: /Users/tigger/.agents/sdlc/ISSUES.md
+              sha256: 66982ab8b25b26ea1bfaf40577bf4955bf0c804cfd035ab582c6d9ff658e2581
+              bytes: 16627
+            - path: /Users/tigger/.agents/sdlc/ORG-SCHEMA.md
+              sha256: 4c93e9ebfd051a1caa3a3a456ef20228c4403f3ca00726ed1ac4c93676ac26cc
+              bytes: 4915
+            - path: /Users/tigger/.agents/sdlc/ORGMODE.md
+              sha256: baffdd38fac0c2dd24d2be5389edb2a0b88ea19e8d67e1bc2f6f65d55601b7b3
+              bytes: 2974
+            - path: /Users/tigger/.agents/sdlc/SECURITY.md
+              sha256: fbceb4dffd2ab69a3edcd1dd924873bdbe5298cffa4c2e65548e04541fb78f73
+              bytes: 5027
+            - path: /Users/tigger/.agents/sdlc/TESTING.md
+              sha256: 1a0d1296b6ec080c7c86b24713c4976a7eb6f9fab7071e2369ce2038baaad4f9
+              bytes: 16346
+            - path: /Users/tigger/.agents/sdlc/technologies/GO.md
+              sha256: 63a41c24322b2c4144367b69777528b023a30222593c462b0696df98b1967917
+              bytes: 7301
+            - path: /Users/tigger/.agents/sdlc/technologies/JAVASCRIPT.md
+              sha256: bdd055c0f688a752dd6e452da385a583c2c875be7249ece0bfd8200f33809acb
+              bytes: 7508
+            - path: /Users/tigger/.agents/sdlc/technologies/WEB.md
+              sha256: c474f4646fae1e318c78c18b68cfe75d7100b2b7dd85d8ad264326fa375bc000
+              bytes: 10423
+            - path: /Users/tigger/code/tigoss/democrac.ie/.sdlc/project.yaml
+              sha256: ae174d8a62862168caa071e9b03f34c7200221db9c8a9f260be757a2d9c07d17
+              bytes: 520
+            - path: /Users/tigger/code/tigoss/democrac.ie/docs/ARCHITECTURE.md
+              sha256: 87bd9617945dd3159a83d6bd97ad22872f5a94d89e4840972b8cd0e57314c017
+              bytes: 12336
+            - path: /Users/tigger/code/tigoss/democrac.ie/docs/MVP.md
+              sha256: 91a1661becf3ef280926c94a9cd1b59ba8e4725fcbce9e89f133ba44e84e128a
+              bytes: 6480
+            - path: /Users/tigger/code/tigoss/democrac.ie/docs/VISION.md
+              sha256: 80f1219bc279d82fb5c8c8a245b1ad216dc05f0362ec71c4fc6d68af9180c095
+              bytes: 4755
+            - path: /Users/tigger/code/tigoss/democrac.ie/docs/work.org
+              sha256: 00298af7c1b4059bafee5be8a46983e6d3f266b78cb7b6f7cc0bf83064f0d1bf
+              bytes: 4981
+            - path: /Users/tigger/code/tigoss/democrac.ie/specs/W001-poll-store-cli/spec.org
+              sha256: 00977152dfcea8279962ee0f479ec2f1b0a5ff7aebb2148fcd75cbb2d89f4f10
+              bytes: 14214
+            - path: /Users/tigger/code/tigoss/democrac.ie/specs/W002-anonymous-ballot/spec.org
+              sha256: 98cd62bc05a187d8fe023a2ce02123f846c87f8f19cae96c78650efe0cb5d9cb
+              bytes: 13931
+            - path: /Users/tigger/code/tigoss/democrac.ie/specs/W003-close-count-results/spec.org
+              sha256: 6e69484c54c2311da44d4af8a8249b2f94e3a1ad3dc367475ecfc09005c3281e
+              bytes: 16692
+          round: 3
+          revision: revised submission (W001 spec.org updated; docs/ARCHITECTURE.md updated to version 5; W002, W003 and all other evidence unchanged)
+          verdict: PASS
+          response: |-
+            GATE: definition
+            REVISION: revised submission (W001 spec.org updated; docs/ARCHITECTURE.md updated to version 5; W002, W003 and all other evidence unchanged)
+
+            VERDICT: PASS
+
+            Review of changed evidence
+            - W001 RT001.2 now enumerates the concrete limit cases (over-200-character title, >200 options, over-200-character names, over-2,000-character descriptions, whitespace-only duplicate names) matching the constraints section exactly — the documented limits are now testable at the CLI boundary.
+            - W001 RT001.5 now exercises both sides of the config coexistence rule: valid Exodan-owned keys (=data_dirs=, =extra_domains=, =timers=, =service=) accepted without semantic effect, and an unknown top-level key rejected with a precise error. This matches the runtime design decision and closes the loop between the design and its verification.
+            - docs/ARCHITECTURE.md version 5 records the torn-record fail-closed recovery decision in the changelog, consistent with the W001/W003 specifications and with DOCUMENTATION.md's versioning and changelog rules.
+            - Unchanged W002/W003 evidence was previously fully reviewed and remains in context; the W001 changes do not alter their interpretation (the shared store contract, =poll_closed_started= boundary and recovery protocol they reference are unchanged in substance).
+
+            Standing checks
+            - No annotation records or blocks in any spec.org; no feedback.yaml supplied (none required). No audit findings, statuses, revisions or session identity duplicated in the specifications. OPERATOR_SIGNOFF correctly remains PENDING.
+            - Full AC↔RT/UT/OT traceability intact across all three specs; tests remain at real user boundaries; no source-text tests, no invented simulations; security impact present in all three designs; scope, proportionality and classification unchanged and compliant.
+
+            No prior findings outstanding; no new findings. Definition sign-off may proceed.
+          updated: "2026-10-02T23:17:52Z"

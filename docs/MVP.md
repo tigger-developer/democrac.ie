@@ -1,6 +1,6 @@
 ---
 title: democrac.ie - MVP Scope
-version: 3
+version: 4
 last-updated: 2026-10-02
 ---
 
@@ -19,7 +19,7 @@ This document defines the minimal first deliverable. Everything here is drawn fr
 ### 2. Vote (anonymous, link-based)
 
 - Anyone with the poll URL can vote; there is no voter login
-- Voter enters a name in a mandatory text box - a self-declared label displayed with results, not an identity
+- Voter enters a name in a mandatory text box - a self-declared label retained for operator audit only, not displayed in public results or treated as verified identity
 - Voter ranks options with preferences 1, 2, 3, ...; any number of preferences from one up to all options is valid
 - Partial rankings are valid ballots; there is no forced number of rankings
 - After submission, the voter sees a confirmation that their ballot was recorded
@@ -38,12 +38,14 @@ This document defines the minimal first deliverable. Everything here is drawn fr
 
 ### 5. Results (after close)
 
-- Anyone with the link sees the full round-by-round count:
+- Anyone with the link sees the full round-by-round count, without individual voter names or ballots:
   - each round's tallies, visualized
   - which option was eliminated each round, and why (fewest votes, or random draw)
   - how votes transferred, in plain language
   - exhausted ballots where relevant
-  - the final winner with its majority share
+  - the final winner when an option reaches a strict majority of active ballots (50% plus one for integer totals); counting stops at that round
+- A visual chart automatically progresses through the count and provides previous/next controls so visitors can pause and revisit any round; the quota and active-ballot denominator are explained
+- A poll closed with no ballots has no winner; no turnout minimum otherwise applies
 - Results are hidden while the poll is open
 - The page explains the count to a general audience: it tells the story of the decision, not just the totals
 
@@ -86,8 +88,11 @@ This document defines the minimal first deliverable. Everything here is drawn fr
 6. Reloading results does not recount or redraw; replaying the closed poll's event log verifies the same outcome using its recorded ballot set and draws
 7. The site is usable, at full fidelity, on phone, tablet, and desktop
 8. Screen-reader users can read a ballot, submit it, and read the results story
+9. Public results never disclose a voter name or individual ballot, including through page data or rendered markup
+10. A majority stops the count; the result explains its active-vote threshold, and the visual count advances automatically while allowing manual backward and forward navigation
 
 ## Document Changelog
 
+- **Version 4:** Kept names and ballots operator-only; stopped the count at the first strict majority and required an automatically progressing, manually navigable visual explanation.
 - **Version 3:** Moved MVP poll creation and manual closure to the Exodan-style operator CLI; deferred creator login, browser administration and mail.
 - **Version 2:** Located each poll in a UUID-named directory with one authoritative TSV event log; aligned close-time count and tie-draw evidence with the architecture.

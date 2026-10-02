@@ -78,6 +78,38 @@ coordination. Use =MIGRATION_DISPOSITION= only to preserve an immutable migratio
 classification; it is provenance, not current state.
 
 * Work items
+** REVIEW W001 - Create and inspect open polls through the operator CLI :feature:
+:PROPERTIES:
+:CUSTOM_ID: w-001
+:PRIORITY: P1
+:SOURCE: operator
+:CREATED: 2026-10-02
+:END:
+
+- *Specification:* [[file:../specs/W001-poll-store-cli/spec.org][W001 - Create and inspect open polls through the operator CLI]]
+- *Dependency:* None; establishes the event store and Exodan-compatible executable.
+
+** REVIEW W002 - Accept anonymous partial-ranking ballots with cookie deterrence :feature:
+:PROPERTIES:
+:CUSTOM_ID: w-002
+:PRIORITY: P1
+:SOURCE: operator
+:CREATED: 2026-10-02
+:END:
+
+- *Specification:* [[file:../specs/W002-anonymous-ballot/spec.org][W002 - Accept anonymous partial-ranking ballots with cookie deterrence]]
+- *Dependency:* [[#w-001][W001 - Create and inspect open polls through the operator CLI]].
+
+** REVIEW W003 - Freeze the instant-runoff count and explain its rounds :feature:
+:PROPERTIES:
+:CUSTOM_ID: w-003
+:PRIORITY: P1
+:SOURCE: operator
+:CREATED: 2026-10-02
+:END:
+
+- *Specification:* [[file:../specs/W003-close-count-results/spec.org][W003 - Freeze the instant-runoff count and explain its rounds]]
+- *Dependencies:* [[#w-001][W001 - Create and inspect open polls through the operator CLI]] and [[#w-002][W002 - Accept anonymous partial-ranking ballots with cookie deterrence]].
 
 * Migration record
 :PROPERTIES:

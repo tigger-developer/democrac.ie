@@ -1,0 +1,222 @@
+#+TITLE: W002 - Accept anonymous partial-ranking ballots with cookie deterrence
+#+SCHEMA: 8
+#+SUBTITLE: Unified change specification
+#+STARTUP: overview
+#+OPTIONS: toc:2 num:nil
+#+OPERATOR_SIGNOFF: PENDING
+
+* Synopsis
+:PROPERTIES:
+:CUSTOM_ID: summary
+:END:
+** Outcome
+- Anyone with an open poll link can *submit one ranked ballot per browser* without an account.
+** Before
+- [[file:../W001-poll-store-cli/spec.org][W001 - poll store and CLI]] creates and displays polls, but does *not accept votes*.
+** After
+- A voter supplies a *mandatory audit-only name* and ranks *one or more* options without an arbitrary ranking cap.
+- A poll-scoped *cookie deters repeat votes*; each accepted ballot enters the poll's event log.
+** Changes
+- Add accessible ballot UI, submission validation, append-only ballot events and confirmation.
+** Unchanged
+- Only operators create/close polls; *no voter login* and no early public tally or voter disclosure.
+** Edge cases
+:PROPERTIES:
+:CUSTOM_ID: synopsis-edge-cases
+:END:
+- Missing name, empty/duplicate/unknown rankings, repeat submission or closed poll *cannot add a ballot*.
+** Decisions
+- The cookie is *deterrence, not identity*: cleared cookies and another device can bypass it.
+** Next step
+- Definition review and operator sign-off precede implementation.
+
+-----
+* Context
+:PROPERTIES:
+:CUSTOM_ID: context
+:END:
+** Problem
+- People need to express partial rankings without being forced to register, while names remain available only to operators for audit.
+** Outcome
+- A usable open-poll ballot accepts valid ranked preferences and refuses ordinary same-browser repeats.
+** Scope
+*** In scope
+- Public ballot rendering and submission, cookie marker, event persistence, responsive accessible interaction, confirmation and safe failure responses.
+*** Out of scope
+- Results, counting, operator close, verified identity, revoting, voter registration or email, exposing name/ballot lists publicly.
+*** Unchanged
+- W001 owns poll creation, UUID paths, event format and Exodan integration.
+** Authority and starting point
+- Project profile :: [[file:../../.sdlc/project.yaml][Project SDLC profile]]
+- Product authority :: [[file:../../docs/MVP.md][MVP scope]], [[file:../../docs/VISION.md][Vision]]
+- Architecture authority :: [[file:../../docs/ARCHITECTURE.md][Proposed architecture]]
+- Dependency :: [[file:../W001-poll-store-cli/spec.org][W001 - poll store and operator CLI]].
+** Constraints and dependencies
+:PROPERTIES:
+:CUSTOM_ID: constraints-and-dependencies
+:END:
+- Begin delivery only after W001's event store and public read path exist; re-check its actual delivered contract.
+- Poll contents and voter names are untrusted. Never expose the event file, voter names or rankings through HTTP reads.
+- Cookie does not establish identity or enforce one human, one vote.
+** Decisions
+- Rankings are a contiguous ordered list of distinct option IDs, from one to every available option; no skipped rank or duplicated choice is accepted.
+- Mandatory name is self-declared, audit-only; confirmation does not repeat it in public query strings, page data or logs.
+** Unresolved blockers
+- None.
+* Acceptance Criteria
+:PROPERTIES:
+:CUSTOM_ID: acceptance-criteria
+:END:
+** AC002.1 - A partial ballot is accepted :ac:
+:PROPERTIES:
+:CUSTOM_ID: ac-002-1
+:END:
+- Criterion :: An open poll accepts a *non-empty, ordered subset* of its options from a visitor with a non-empty name, and confirms durable recording.
+- Proven by :: [[#rt-002-1][RT002.1 - Submit partial and full rankings]].
+** AC002.2 - Invalid rankings are rejected :ac:
+:PROPERTIES:
+:CUSTOM_ID: ac-002-2
+:END:
+- Criterion :: Blank name, no preference, repeated/unknown option, duplicate rank, malformed or oversized input *does not append a ballot* and gives a useful error.
+- Proven by :: [[#rt-002-2][RT002.2 - Reject invalid ballot]].
+** AC002.3 - Repeat browser votes are deterred :ac:
+:PROPERTIES:
+:CUSTOM_ID: ac-002-3
+:END:
+- Criterion :: After a valid submission, a poll-scoped browser marker causes another submission from that browser to be *declined without a second accepted ballot*.
+- Proven by :: [[#rt-002-3][RT002.3 - Cookie and replay deterrence]].
+** AC002.4 - Closed polls refuse ballots :ac:
+:PROPERTIES:
+:CUSTOM_ID: ac-002-4
+:END:
+- Criterion :: If a valid =poll_closed_started= event has fixed the final accepted-ballot sequence, subsequent submissions *cannot add a ballot*, even if the visitor loaded the open form earlier.
+- Proven by :: [[#rt-002-4][RT002.4 - Reject after close boundary]].
+** AC002.5 - Voter details remain operator-only :ac:
+:PROPERTIES:
+:CUSTOM_ID: ac-002-5
+:END:
+- Criterion :: Public HTTP responses, scripts and page data *do not disclose* other voters' names, ballots, or interim tallies; private events retain accepted names and rankings for operator audit.
+- Proven by :: [[#rt-002-5][RT002.5 - Public privacy boundary]].
+** AC002.6 - Ranking works without drag interaction :ac:
+:PROPERTIES:
+:CUSTOM_ID: ac-002-6
+:END:
+- Criterion :: A voter can select any valid ranking with labelled keyboard-operable controls and see their choices in order on phone, tablet and desktop.
+- Proven by :: [[#rt-002-6][RT002.6 - Rendered semantic ballot]] and [[#ut-002-1][UT002.1 - Ballot usability]].
+* Test Definitions
+:PROPERTIES:
+:CUSTOM_ID: test-definitions
+:END:
+** RT002.1 - Submit partial and full rankings :testdef:
+:PROPERTIES:
+:CUSTOM_ID: rt-002-1
+:END:
+- Covers :: [[#ac-002-1][AC002.1 - A partial ballot is accepted]].
+- Boundary :: HTTP POST and reopened poll event log.
+- Action :: Submit ballots ranking only first choice, two choices, then all options from independent browser sessions.
+- Expected :: Each receives confirmation; durable events preserve exact preference order and self-declared name.
+** RT002.2 - Reject invalid ballot :testdef:
+:PROPERTIES:
+:CUSTOM_ID: rt-002-2
+:END:
+- Covers :: [[#ac-002-2][AC002.2 - Invalid rankings are rejected]].
+- Boundary :: HTTP POST and event log.
+- Action :: Send blank name, no ranking, repeated or unknown option, duplicate rank, malformed body and body over documented limit.
+- Expected :: Each is rejected with readable feedback and no accepted-ballot event.
+** RT002.3 - Cookie and replay deterrence :testdef:
+:PROPERTIES:
+:CUSTOM_ID: rt-002-3
+:END:
+- Covers :: [[#ac-002-3][AC002.3 - Repeat browser votes are deterred]].
+- Boundary :: HTTP responses and event log.
+- Action :: Submit, repeat with the returned cookie, then repeat the same request without cookies.
+- Expected :: Same-browser repeat is declined; no-cookie request illustrates documented deterrence limit. A replayed request carrying the cookie is not counted twice.
+** RT002.4 - Reject after close boundary :testdef:
+:PROPERTIES:
+:CUSTOM_ID: rt-002-4
+:END:
+- Covers :: [[#ac-002-4][AC002.4 - Closed polls refuse ballots]].
+- Boundary :: HTTP POST against a closing/closed poll in isolated local state.
+- Action :: Load an open form, then append a well-formed =poll_closed_started= event through the store with the current last accepted ballot sequence. Submit the stale form, and exercise concurrent ballot and close-start appends under the shared store lock.
+- Expected :: No ballot is accepted after the durable boundary; each accepted-before-boundary ballot is present exactly once. Full CLI closure and counting belong to W003.
+** RT002.5 - Public privacy boundary :testdef:
+:PROPERTIES:
+:CUSTOM_ID: rt-002-5
+:END:
+- Covers :: [[#ac-002-5][AC002.5 - Voter details remain operator-only]].
+- Boundary :: HTTP response body, scripts, accessible page content and private event log.
+- Action :: Submit a distinctive synthetic name and ranking, then request public routes without its cookie.
+- Expected :: Public content does not reveal the name, ballot, raw log or tally; private log retains name and ranking.
+** RT002.6 - Rendered semantic ballot :testdef:
+:PROPERTIES:
+:CUSTOM_ID: rt-002-6
+:END:
+- Covers :: [[#ac-002-6][AC002.6 - Ranking works without drag interaction]].
+- Boundary :: Served HTML and form submission without JavaScript.
+- Action :: Read a poll with several options and submit partial rankings using only named form controls.
+- Expected :: Controls have labels, rank order is visible, valid ranking is accepted without script or drag gestures.
+** UT002.1 - Ballot usability :testdef:
+:PROPERTIES:
+:CUSTOM_ID: ut-002-1
+:END:
+- Covers :: [[#ac-002-6][AC002.6 - Ranking works without drag interaction]].
+- Validation method :: User validation with keyboard and screen reader plus phone, tablet and desktop viewports.
+- Procedure :: Rank one, two and all options; revise the unsent ranking, submit and inspect focus/error states.
+- Expected :: The interaction is legible, operable, responsive and clearly explains that further ranking is optional.
+* Edge Cases
+:PROPERTIES:
+:CUSTOM_ID: edge-cases
+:END:
+** Cookie and identity gap
+- Condition :: A visitor removes the cookie or uses another device.
+- Required behaviour :: A ballot can be accepted; interface and documentation make no one-person-one-vote claim.
+- Covered by :: [[#ac-002-3][AC002.3 - Repeat browser votes are deterred]] and [[#rt-002-3][RT002.3 - Cookie and replay deterrence]].
+** Poll closure during a draft
+- Condition :: Poll closes after the page loads but before submission.
+- Required behaviour :: The draft is declined without a ballot event.
+- Covered by :: [[#ac-002-4][AC002.4 - Closed polls refuse ballots]] and [[#rt-002-4][RT002.4 - Reject after close boundary]].
+* Solution Design
+:PROPERTIES:
+:CUSTOM_ID: solution-design
+:END:
+** Architecture context
+- Relevant components :: W001 poll reader/writer, public HTTP renderer and per-poll TSV event stream.
+- Ownership boundary :: Browser and HTTP are untrusted; Exodan owns TLS and network routing, not ballot rules.
+** High-level design
+*** Components and responsibilities
+- The ballot handler loads an open poll, renders ordered choices with a simple number-select or add-to-ranking control, validates submitted option IDs and name, then appends one accepted-ballot event under the W001 per-poll serialization. It refuses submissions once the log contains =poll_closed_started= (payload: final accepted ballot sequence and option snapshot); W003 owns the operator command that appends this event and computes the outcome.
+- Cookie handling sets a random poll-scoped opaque marker only after successful append. Store the marker's digest in the accepted event to detect retries with the same marker; do not expose it in the public page or log raw cookie values. Concurrent submissions with a shared marker must serialize before checking duplicates.
+*** Interfaces and configuration
+- HTTP :: =GET /poll/{uuid}= renders the ballot or closed notice. =POST /poll/{uuid}/vote= accepts named ranked option IDs; success redirects to confirmation. Unrelated verbs have no mutation.
+- Input :: One name, at least one distinct option ID and no more than the option count; bound request and name sizes. The field order determines preference order, independently of visual layout.
+- Cookie :: Host-only, HttpOnly, Secure on HTTPS, SameSite=Lax, scoped to the poll path; attempts with missing cookies remain possible. Expires no earlier than poll lifetime; MVP polls do not auto-expire.
+*** Data and failure
+- The poll's event file is authoritative. A rejected duplicate can append a rejection audit event without adding a ballot; validation failures must not disclose details of other ballots. If durable append fails, return failure without claiming success or setting a voted cookie.
+- Ballot/close-start ordering is decided under a single per-poll lock shared across server and CLI processes. W002 tests the close-start event boundary directly through the store; W003 supplies the CLI command. Neither lock nor cookie is a verified human identity.
+*** Simplicity and proportionality
+- Server-side form submission works without scripting. Optional vanilla JS may improve selection and feedback but cannot become the only voting path.
+** Design decisions and verification
+*** Operator-only audit labels
+- Decision :: Retain names only in private ballot events; public pages show no names or individual ballots.
+- Verification :: [[#rt-002-5][RT002.5 - Public privacy boundary]]; code review checks static asset routes cannot serve =STATE_DIRECTORY=.
+*** Serialized ballot append
+- Decision :: Close and voting share the per-poll state serialization boundary.
+- Verification :: [[#rt-002-4][RT002.4 - Reject after close boundary]].
+** Architecture impact
+*** Security impact
+- Threat boundary :: Anonymous browser input reaches private append-only state; no browser authentication is claimed.
+- Data and secrets :: Escape untrusted names/descriptions; store private TSV files with least privilege; prohibit voter-name leakage in responses, URLs and logs.
+- Access :: CLI-only administration remains; reject CSRF or cross-origin submissions using origin checks and a per-form token or equivalent validated policy.
+- Conclusion :: Validate all ballot fields and request sizes; prevent HTML/script injection and inadvertent private data serving.
+*** Other relevant qualities
+- Accessibility :: No drag-only ranking, labelled controls, visible errors and keyboard operation.
+* Delivery Handoff
+:PROPERTIES:
+:CUSTOM_ID: delivery-handoff
+:END:
+- Required reading :: [[file:../../docs/MVP.md][MVP scope]], [[file:../../docs/ARCHITECTURE.md][Architecture]], [[file:../W001-poll-store-cli/spec.org][W001 - poll store and operator CLI]].
+- Entry conditions :: Definition audit and explicit sign-off; W001 delivered and store contract verified before implementation.
+- First implementation step :: Write [[#rt-002-1][RT002.1 - Submit partial and full rankings]] and observe intended RED before implementing voting.
+- Definition evidence :: =audits.yaml= (harness-owned).
+- Validation evidence :: =validation.org= at delivery admission.
+- Documentation impact :: Update README ballot usage and reconcile architecture and MVP against actual behaviour.

@@ -1,0 +1,232 @@
+#+TITLE: W003 - Freeze the instant-runoff count and explain its rounds
+#+SCHEMA: 8
+#+SUBTITLE: Unified change specification
+#+STARTUP: overview
+#+OPTIONS: toc:2 num:nil
+#+OPERATOR_SIGNOFF: PENDING
+
+* Synopsis
+:PROPERTIES:
+:CUSTOM_ID: summary
+:END:
+** Outcome
+- An operator *closes* a poll; visitors see its *frozen, visual, round-by-round* count.
+** Before
+- [[file:../W001-poll-store-cli/spec.org][W001 - poll store and CLI]] and [[file:../W002-anonymous-ballot/spec.org][W002 - anonymous ballot]] provide an open poll and ballots, but *no result*.
+** After
+- The count *stops at the first strict majority* of active ballots; each non-winner's earlier status is shown by elimination round.
+- An automatic visual progression and manual back/forward controls explain each tally, transfer, exhaustion and winning threshold.
+- Names and individual ballots *never appear publicly*; draw source and sample stay in the audit log.
+** Changes
+- Add CLI closure, durable count events, tie draws, public aggregate results and accessible animation controls.
+** Unchanged
+- Only the *operator closes* a poll; ballots remain append-only and results stay hidden until close.
+** Edge cases
+:PROPERTIES:
+:CUSTOM_ID: synopsis-edge-cases
+:END:
+- *Zero ballots yield no winner*; retry after a complete event cannot produce a new random result, while torn event records fail closed for operator recovery.
+** Decisions
+- *No minimum-turnout quorum*; ties use recorded random elimination; *no counts beyond a winner*.
+** Next step
+- Definition review and operator sign-off precede implementation.
+
+-----
+* Context
+:PROPERTIES:
+:CUSTOM_ID: context
+:END:
+** Problem
+- A decision poll needs a credible final result whose counting steps explain why the winner emerged without publishing how individuals voted.
+** Outcome
+- A frozen result at manual close, reproducible from accepted ballots and recorded tie draws, available as an accessible aggregate explanation.
+** Scope
+*** In scope
+- Operator close CLI, single-winner instant runoff, random tie evidence, frozen result and recovery, public result rendering, visual progression and controls.
+*** Out of scope
+- Multi-winner surplus transfers, scheduled closure, live/preliminary results, public ballot data, vote amendment, browser administration and configurable quorum.
+*** Unchanged
+- Per-poll event store, anonymous ballot and cookie deterrence established by W001/W002.
+** Authority and starting point
+- Project profile :: [[file:../../.sdlc/project.yaml][Project SDLC profile]]
+- Product authority :: [[file:../../docs/MVP.md][MVP scope]], [[file:../../docs/VISION.md][Vision]]
+- Architecture authority :: [[file:../../docs/ARCHITECTURE.md][Proposed architecture]]
+- Dependencies :: [[file:../W001-poll-store-cli/spec.org][W001 - poll store and operator CLI]] and [[file:../W002-anonymous-ballot/spec.org][W002 - anonymous ballot and cookie deterrence]].
+** Constraints and dependencies
+:PROPERTIES:
+:CUSTOM_ID: constraints-and-dependencies
+:END:
+- W001/W002 must be delivered before W003; the close CLI uses Exodan's =APP-admin= wrapper.
+- No public endpoint may reveal names, ballots, cookie markers or early tallies.
+- One authoritative per-poll TSV stream owns both accepted ballots and count result; no separately authoritative results file.
+** Decisions
+- A strict majority is =floor(active/2)+1=, where active equals accepted ballots minus exhausted ballots for that round. Count stops immediately when a candidate reaches this threshold; no extra eliminations.
+- No turnout quorum. Zero ballots close to a visible no-result state; a round with no active ballots likewise has no winner.
+- A tie at the elimination boundary draws one option to eliminate, including a tied final pair; no winner is selected by a random tie unless the elimination yields an active majority.
+** Unresolved blockers
+- None.
+* Acceptance Criteria
+:PROPERTIES:
+:CUSTOM_ID: acceptance-criteria
+:END:
+** AC003.1 - Close freezes accepted votes and result :ac:
+:PROPERTIES:
+:CUSTOM_ID: ac-003-1
+:END:
+- Criterion :: Closing an open poll through the admin CLI fixes the accepted ballot set and records one final outcome; later submissions are *rejected* and repeated close is *idempotent*.
+- Proven by :: [[#rt-003-1][RT003.1 - Close and retry]].
+** AC003.2 - Count stops at the first majority :ac:
+:PROPERTIES:
+:CUSTOM_ID: ac-003-2
+:END:
+- Criterion :: Each round allocates each active ballot to its highest surviving preference; when an option first reaches *more than half of active ballots*, the count stops and names that option the winner.
+- Proven by :: [[#rt-003-2][RT003.2 - Transfer and majority scenarios]].
+** AC003.3 - Eliminations and exhaustion are explainable :ac:
+:PROPERTIES:
+:CUSTOM_ID: ac-003-3
+:END:
+- Criterion :: Each recorded pre-winning round states option tallies, the eliminated option, transfers, exhausted ballots and active-vote winning threshold; public results name *non-winners by elimination round*.
+- Proven by :: [[#rt-003-2][RT003.2 - Transfer and majority scenarios]] and [[#rt-003-5][RT003.5 - Aggregate public explanation]].
+** AC003.4 - Tie draws are recorded and replayable :ac:
+:PROPERTIES:
+:CUSTOM_ID: ac-003-4
+:END:
+- Criterion :: An elimination tie uses a random draw whose *source identifier, algorithm version, sampled value, ordered tied options, mapping and outcome* are recorded once and reused on restart.
+- Proven by :: [[#rt-003-3][RT003.3 - Tied elimination and replay]].
+** AC003.5 - No ballots yield no winner :ac:
+:PROPERTIES:
+:CUSTOM_ID: ac-003-5
+:END:
+- Criterion :: Closing with no accepted ballots records a *no-result* outcome, not a random winner; no turnout minimum is required otherwise.
+- Proven by :: [[#rt-003-4][RT003.4 - Empty and exhausted count]].
+** AC003.6 - Public result is visual and private :ac:
+:PROPERTIES:
+:CUSTOM_ID: ac-003-6
+:END:
+- Criterion :: Only after close, visitors can view aggregate round charts and plain-language majority explanation with automatically advancing display and usable previous/next/pause controls; no public result contains *names or individual ballots*.
+- Proven by :: [[#rt-003-5][RT003.5 - Aggregate public explanation]] and [[#ut-003-1][UT003.1 - Visual and accessible count]].
+** AC003.7 - Interrupted close is recoverable without redraw :ac:
+:PROPERTIES:
+:CUSTOM_ID: ac-003-7
+:END:
+- Criterion :: A failed/interrupted close *never exposes a partial result*; when all recorded events are complete, retry resumes the same ballot snapshot and previously recorded draws. A torn record fails closed pending operator recovery from backup.
+- Proven by :: [[#rt-003-6][RT003.6 - Interrupted close recovery]].
+* Test Definitions
+:PROPERTIES:
+:CUSTOM_ID: test-definitions
+:END:
+** RT003.1 - Close and retry :testdef:
+:PROPERTIES:
+:CUSTOM_ID: rt-003-1
+:END:
+- Covers :: [[#ac-003-1][AC003.1 - Close freezes accepted votes and result]].
+- Boundary :: CLI, HTTP ballot endpoint and event stream.
+- Action :: Submit a ballot, close, submit again and close again.
+- Expected :: First ballot counted, second declined, identical stored outcome and no additional draws.
+** RT003.2 - Transfer and majority scenarios :testdef:
+:PROPERTIES:
+:CUSTOM_ID: rt-003-2
+:END:
+- Covers :: [[#ac-003-2][AC003.2 - Count stops at the first majority]] and [[#ac-003-3][AC003.3 - Eliminations and exhaustion are explainable]].
+- Boundary :: CLI close with synthetic recorded ballot sets and public results.
+- Action :: Count an initial majority, a later transferred majority, and partial rankings whose eliminated final choice exhausts.
+- Expected :: Exact round totals, threshold and transfers; no extra round after majority; eliminated options identified by round; no fabricated transfer of exhausted ballots.
+** RT003.3 - Tied elimination and replay :testdef:
+:PROPERTIES:
+:CUSTOM_ID: rt-003-3
+:END:
+- Covers :: [[#ac-003-4][AC003.4 - Tie draws are recorded and replayable]].
+- Boundary :: Close CLI and fresh process reading test poll with injected deterministic random sampler.
+- Action :: Force a tie including final-pair tie; close and reopen repeatedly.
+- Expected :: Exactly one recorded draw for each necessary tie, complete source/sample/mapping evidence, identical eliminations without new sampling on reads or retry.
+** RT003.4 - Empty and exhausted count :testdef:
+:PROPERTIES:
+:CUSTOM_ID: rt-003-4
+:END:
+- Covers :: [[#ac-003-5][AC003.5 - No ballots yield no winner]].
+- Boundary :: CLI close and result route.
+- Action :: Close an empty poll, and a poll with partial rankings across eliminations.
+- Expected :: Empty poll has no winner/draw; later rounds show exact active and exhausted ballot counts; no turnout threshold blocks a nonempty valid result.
+** RT003.5 - Aggregate public explanation :testdef:
+:PROPERTIES:
+:CUSTOM_ID: rt-003-5
+:END:
+- Covers :: [[#ac-003-3][AC003.3 - Eliminations and exhaustion are explainable]] and [[#ac-003-6][AC003.6 - Public result is visual and private]].
+- Boundary :: Served HTML/JS and HTTP responses before/after close.
+- Action :: Request public results with distinctive synthetic names/rankings before close, then after close.
+- Expected :: Before close no tallies; after close chart data, text explanation, round controls and totals but no voter name, cookie marker or individual ballot in DOM, assets or response body.
+** RT003.6 - Interrupted close recovery :testdef:
+:PROPERTIES:
+:CUSTOM_ID: rt-003-6
+:END:
+- Covers :: [[#ac-003-7][AC003.7 - Interrupted close is recoverable without redraw]].
+- Boundary :: Poll store and CLI with controlled failure after snapshot and after recorded tie sample, then fresh process retry.
+- Action :: Interrupt close after complete snapshot and tie-draw records, then restart and retry; separately inject a torn final record.
+- Expected :: No partial result exposed; ballot boundary preserved; prior tie samples reused on intact log retry. Torn record prevents writes and result display until an operator restores a verified backup or creates a replacement poll.
+** UT003.1 - Visual and accessible count :testdef:
+:PROPERTIES:
+:CUSTOM_ID: ut-003-1
+:END:
+- Covers :: [[#ac-003-6][AC003.6 - Public result is visual and private]].
+- Validation method :: User validation on phone, tablet and desktop, including keyboard/screen reader and reduced-motion preference.
+- Procedure :: Watch automatic progression; pause and step backwards/forwards through transfer and elimination rounds.
+- Expected :: User understands the =50%+1= threshold, can inspect every round at their own pace, and reads the same information without animation.
+* Edge Cases
+:PROPERTIES:
+:CUSTOM_ID: edge-cases
+:END:
+** Ballot race with closure
+- Condition :: A ballot is accepted while close is requested.
+- Required behaviour :: The serialized event order determines inclusion; every accepted pre-close ballot is counted exactly once, no post-boundary ballot is accepted.
+- Covered by :: [[#ac-003-1][AC003.1 - Close freezes accepted votes and result]] and [[#rt-003-1][RT003.1 - Close and retry]].
+** Random elimination without active ballots
+- Condition :: No ballots survive at an intermediate state or none were submitted.
+- Required behaviour :: Record no result rather than eliminate arbitrarily just to select a winner.
+- Covered by :: [[#ac-003-5][AC003.5 - No ballots yield no winner]] and [[#rt-003-4][RT003.4 - Empty and exhausted count]].
+* Solution Design
+:PROPERTIES:
+:CUSTOM_ID: solution-design
+:END:
+** Architecture context
+- Relevant components :: W001 event store and CLI, W002 ballot handler, responsive web renderer; [[file:../../docs/ARCHITECTURE.md][proposed architecture]].
+- Ownership boundary :: Application owns count and audit; Exodan owns operator wrapper, service and TLS.
+** High-level design
+*** Components and responsibilities
+- The operator close subcommand acquires the same poll lock as ballot submission, records a close-start event with last accepted ballot sequence and a frozen option snapshot, then calculates rounds. It records each tie sample before dependent elimination and appends a completed result event last.
+- The results handler reads only a completed event sequence and a safe aggregate projection. Individual ballots and name fields never leave private storage; rendering cannot pass raw events or ballot arrays to browser JS.
+*** Essential mechanisms
+- For each round, allocate each ballot to the first option in its ordered ranking still in play. Exclude exhausted ballots from active denominator; required votes are =floor(active/2)+1=. Stop at first strict majority. Otherwise eliminate the single least-supported option; if tied, sample uniformly over stable-sorted tied IDs, append draw evidence, then transfer. Preserve tally and transfer matrices by option ID per round.
+- Random source is Go's cryptographic operating-system random interface, with identifier and selection algorithm version recorded. Use unbiased bounded-integer selection. On retry, consume recorded draws in order rather than sampling anew; reject a recorded draw whose tied IDs or mapping do not match recomputation.
+*** Interfaces and configuration
+- CLI :: =democrac close POLL_UUID=; repeated close returns the existing outcome and URL without a new count. Unknown poll fails. Public GET result route is =/poll/{uuid}/results=; before close, no tally or result is exposed.
+- Event lifecycle :: =poll_closed_started= fixes accepted ballot sequence and blocks voting; =tie_draw= records sample and mapping; =count_round= records aggregate tallies/transfer/exhaustion; =poll_closed_completed= records final outcome and terminal sequence. Readers reject malformed or contradictory event sequences. Completion alone makes results visible.
+*** Failure behaviour
+- Close restart after interruption replays complete events, verifies snapshot and prior draw decisions, then resumes without changing accepted ballots or sampled choices. A damaged completed event or incomplete trailing record is an error, not a new draw: leave the poll unavailable and require operator inspection and restoration of a verified backup or creation of a replacement poll. Never silently truncate or discard audit evidence.
+- Repeat closure with a completed event performs no append. If zero ballots, completion records no winner and a plain-language explanation without a draw.
+*** Simplicity and proportionality
+- One count pass at close and one TSV stream avoid an external database and mutable results cache. Browser animation presents persisted aggregates only; it never counts ballots.
+** Design decisions and verification
+*** Frozen aggregate result
+- Decision :: Only =poll_closed_completed= authorizes public results; no request-time recomputation or draw.
+- Verification :: [[#rt-003-1][RT003.1 - Close and retry]] and [[#rt-003-6][RT003.6 - Interrupted close recovery]].
+*** Private ballot boundary
+- Decision :: Projection excludes ballot and name fields before templating or serialization.
+- Verification :: [[#rt-003-5][RT003.5 - Aggregate public explanation]]; implementation review checks no public static file mapping to state root.
+** Architecture impact
+*** Security impact
+- Threat boundary :: Public readers can see only aggregate results after close; operator CLI is host-restricted.
+- Data and secrets :: Names and exact rankings remain private; random source identifier and sample may be included in an operator audit view but public display needs only draw reason and outcome.
+- Access :: No browser close action; repeat and concurrent close serialize; poll UUID is validated before file lookup.
+- Conclusion :: Fail closed on incomplete results and keep raw events out of HTTP and static paths.
+*** Other relevant qualities
+- Accessibility :: Server-rendered full text account of rounds precedes optional JS animation; keyboard controls, focus management, chart textual equivalents and reduced-motion preference are required.
+* Delivery Handoff
+:PROPERTIES:
+:CUSTOM_ID: delivery-handoff
+:END:
+- Required reading :: [[file:../../docs/MVP.md][MVP scope]], [[file:../../docs/ARCHITECTURE.md][Architecture]], [[file:../W001-poll-store-cli/spec.org][W001 - poll store and operator CLI]], [[file:../W002-anonymous-ballot/spec.org][W002 - anonymous ballot and cookie deterrence]].
+- Entry conditions :: Definition audit and explicit sign-off; W001 and W002 delivered and event/ballot contracts verified.
+- First implementation step :: Write [[#rt-003-2][RT003.2 - Transfer and majority scenarios]] and observe intended RED before implementing counting.
+- Definition evidence :: =audits.yaml= (harness-owned).
+- Validation evidence :: =validation.org= at delivery admission.
+- Documentation impact :: Update README with close/results usage and align architecture counting/recovery description with implementation.

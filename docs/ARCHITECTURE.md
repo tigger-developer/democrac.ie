@@ -1,6 +1,6 @@
 ---
 title: democrac.ie - Architecture
-version: 3
+version: 5
 last-updated: 2026-10-02
 ---
 
@@ -48,15 +48,17 @@ open -> closed
 Single-winner instant runoff (PR-STV in substance, one winner):
 
 1. Count first preferences for each option
-2. If one option has a strict majority of non-exhausted ballots, it wins
+2. If one option has a strict majority of active (non-exhausted) ballots, it wins and counting stops; for an integer active tally this is half the active votes rounded down plus one
 3. Otherwise eliminate the option with the fewest votes; each ballot whose top surviving preference was the eliminated option transfers to its next surviving preference
 4. Ballots with no surviving ranked preference are exhausted
-5. Repeat until one option has a majority of the votes still in play
+5. Repeat until one option has a majority of the votes still in play; explain the denominator and required votes in each round
 6. If the final two options tie, resolve by random draw
 
 **Tie handling:** when options tie for fewest votes at an elimination boundary, one is eliminated by random draw. The draw, the options involved, and the order in which they were drawn are recorded in the audit trail.
 
 **Exhausted ballots:** a ballot ranking only a "1" is valid and counts in every round its option survives; once its last ranked option is eliminated it is exhausted and counts in no further tally (but remains in the audit record).
+
+There is no minimum-turnout quorum. A poll with zero ballots closes without a winner or random draw; other exceptional cases where no active ballots remain produce no winner rather than selecting an unsupported option.
 
 Closing a poll freezes its accepted ballot set. The close operation records the count's round tallies, eliminations, transfers, exhausted ballots, random draws and outcome in the same authoritative event stream. A results request reads the recorded outcome: it does not perform a new count or draw. Replay can independently verify the count from the recorded ballots and draw outcomes.
 
@@ -90,7 +92,7 @@ STATE_DIRECTORY/
 
 Each event occupies one physical TSV line with a sequence number, timestamp, event type and JSON payload separated by tabs. JSON encoding preserves tabs and newlines in names and descriptions without letting them split the record. MVP event types cover creation, ballot submissions, rejected duplicate attempts, closure, count rounds and draw outcomes. Later option edits, if supported, would append events rather than rewrite history. The ballot event contains ordered option IDs; a replay of the log reconstructs the poll and validates the recorded result.
 
-Writes to an individual poll are serialized. The close operation must commit the frozen count as a complete outcome before exposing results; if it is interrupted, recovery resumes from the existing events without generating a second draw. The exact durability and recovery protocol, including detection of an incomplete final record or count, remains to be specified before implementation. Corrections append new events rather than rewriting prior evidence.
+Writes to an individual poll are serialized. The close operation must commit the frozen count as a complete outcome before exposing results; if interrupted after a complete event, retry resumes using recorded draws without generating another. A torn event or invalid sequence fails closed; an operator retains the damaged file for inspection and restores a verified backup or creates a replacement poll. The app never silently truncates audit evidence. Corrections append new events rather than rewriting prior evidence.
 
 Keeping all poll-owned data under one directory gives a future expiry routine a clear scope. The MVP does not purge polls; any later configurable purge must define its audit and retention consequences before removing the directory.
 
@@ -105,7 +107,7 @@ poll
   │     ├── description (optional)
   │     └── position
   └── ballots[]
-        ├── voter_name (mandatory, self-declared label, not an identity)
+        ├── voter_name (mandatory; operator audit only, never public)
         └── rankings (ordered option IDs, 1..N, any length up to N)
 ```
 
@@ -115,7 +117,7 @@ The MVP has no browser administration, accounts or email login. Exodan's `APP-ad
 
 **Operators:** invoke the application's create and close subcommands through the wrapper. The application owns command validation and event writes; Exodan owns the host-side operator authorization and wrapper. Browser-based self-service creation, management and magic-link login are roadmap features. The MVP's poll creation command emits an open poll with its initial options; changing options after voting begins is outside its scope.
 
-**Voters:** no authentication at all. Possession of the poll URL is the ballot access credential. After a ballot is submitted, a cookie marks the browser as having voted and further ballots from that browser are declined. The name text box is a self-declared label for display with results, not an identity or access token.
+**Voters:** no authentication at all. Possession of the poll URL is the ballot access credential. After a ballot is submitted, a cookie marks the browser as having voted and further ballots from that browser are declined. The name text box is an operator-only self-declared audit label, not an identity or access token. Public results contain only aggregate counts, never names or individual ballots.
 
 ### Results Experience
 
@@ -126,6 +128,7 @@ After close, the results page presents the count as a story, in the site's singl
 - How votes transferred, in plain language
 - Exhausted-ballot counts shown where relevant
 - Final winner with its majority share
+- An automatically advancing visual count with pause and previous/next controls; the same rounds and threshold remain readable without animation, including for screen readers
 
 The rendering is server-side HTML plus progressive enhancement (vanilla JS): the full story is readable without scripting, and the round-by-round animation is layered on top. Explainer copy is written for a general audience.
 
@@ -160,5 +163,7 @@ Backup, process supervision, health checks, and TLS are owned by the Exodan flee
 
 ## Document Changelog
 
+- **Version 5:** Defined torn-record fail-closed recovery through retained evidence and a verified backup or replacement poll, without silent truncation.
+- **Version 4:** Restricted voter labels to operator audit, stopped the count at the first strict majority of active ballots, and specified navigable visual results and zero-ballot behaviour.
 - **Version 3:** Replaced MVP creator login and browser management with Exodan-style admin CLI creation and closure; deferred mail and creator authentication. Created polls open with their initial options.
 - **Version 2:** Replaced separate last-write-wins CSV state and audit files with one authoritative TSV event stream per UUID-named poll directory; specified count freeze on close and recorded random-source evidence. Interrupted-close recovery remains an explicit design question.

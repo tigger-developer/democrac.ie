@@ -1,0 +1,343 @@
+version: 1
+audits:
+    - work_item: W001
+      gate: definition
+      session_id: 20261003_001004_83c7d1
+      harness: hermes
+      provider: nous
+      model: z-ai/glm-5.3
+      configured:
+        harness: claude
+        model: claude-sonnet-5.5
+      previous_sessions:
+        - session_id: 05872291-0bba-4066-a3f7-cfd48962748b
+          harness: claude
+          model: claude-sonnet-5.5
+          reason: start-failed-fallback
+          updated: "2026-10-02T23:10:03Z"
+      external_round: 4
+      status: passed
+      updated: "2026-10-02T23:17:57Z"
+      revision: W001 spec.org @ sha256 00977152dfcea8279962ee0f479ec2f1b0a5ff7aebb2148fcd75cbb2d89f4f10
+      verdict: PASS
+      response: |-
+        GATE: definition
+        REVISION: W001 spec.org @ sha256 00977152dfcea8279962ee0f479ec2f1b0a5ff7aebb2148fcd75cbb2d89f4f10
+        VERDICT: PASS
+
+        Prior provisional-pass follow-ups resolved:
+        1. Config-key policy coverage: RT001.5 now loads a config containing valid Exodan-owned keys alongside base_url (coexistence without altered semantics) and one with an unknown top-level key (precise failure), matching the design decision exactly.
+        2. Input bounds and normalization: RT001.2 now enumerates over-limit title, option-count extremes (fewer than two / more than 200), over-length option names and descriptions, exact duplicates, and whitespace-differing duplicate names, matching the stated constraints.
+        3. Architecture changelog: docs/ARCHITECTURE.md is at version 5 with a changelog entry recording the torn-record fail-closed recovery decision; the older "explicit design question" note remains only as preserved version-2 history, consistent with DOCUMENTATION.md.
+
+        Full re-check of the changed revision: traceability complete and bidirectional; AC/test IDs unique, tagged and well-formed; no annotation records; no feedback.yaml expected; no audit-state duplication; Synopsis consistent with the detail sections; scope, proportionality and template-inflation assessments unchanged with no new mechanisms introduced; security impact retained; tests remain feasible at the executable/HTTP boundary with temporary state roots; TDD entry point stated.
+
+        One non-gating observation for the delivery agent's discretion, not a finding: RT001.5's Exodan-owned key case list names data_dirs, extra_domains, timers and service but not the also-tolerated legacy exec_args; adding it to the case group is optional and requires no specification change.
+      history:
+        - diagnostic: /Users/tigger/code/tigoss/democrac.ie/.sdlc/audit-diagnostics/audit-432057019.log
+          cache_key: sha256:9b639bdc0c7a598af9d76b1505e142020de426d52d7db1135c4e5d5b8b370c2f
+          session_id: 05872291-0bba-4066-a3f7-cfd48962748b
+          harness: claude
+          model: claude-sonnet-5.5
+          incident: start-failed
+          evidence:
+            - path: /Users/tigger/.agents/sdlc/ARCHITECTURE.md
+              sha256: bd7a66ffd967010eefb8dc7abe64b059994c7b0f44ed5f5c30ec73e354f5b7f7
+              bytes: 8154
+            - path: /Users/tigger/.agents/sdlc/CODING.md
+              sha256: a69a5d3b7ce3604b093703d72ab0de1bb6d607f140baab17292d209054fe902f
+              bytes: 13502
+            - path: /Users/tigger/.agents/sdlc/DOCUMENTATION.md
+              sha256: d8696dca9f4ed75cc8487e064a8c6756a418bbe623e55bcde0bc58996b011c9c
+              bytes: 7652
+            - path: /Users/tigger/.agents/sdlc/ISSUES.md
+              sha256: 66982ab8b25b26ea1bfaf40577bf4955bf0c804cfd035ab582c6d9ff658e2581
+              bytes: 16627
+            - path: /Users/tigger/.agents/sdlc/ORG-SCHEMA.md
+              sha256: 4c93e9ebfd051a1caa3a3a456ef20228c4403f3ca00726ed1ac4c93676ac26cc
+              bytes: 4915
+            - path: /Users/tigger/.agents/sdlc/ORGMODE.md
+              sha256: baffdd38fac0c2dd24d2be5389edb2a0b88ea19e8d67e1bc2f6f65d55601b7b3
+              bytes: 2974
+            - path: /Users/tigger/.agents/sdlc/SECURITY.md
+              sha256: fbceb4dffd2ab69a3edcd1dd924873bdbe5298cffa4c2e65548e04541fb78f73
+              bytes: 5027
+            - path: /Users/tigger/.agents/sdlc/TESTING.md
+              sha256: 1a0d1296b6ec080c7c86b24713c4976a7eb6f9fab7071e2369ce2038baaad4f9
+              bytes: 16346
+            - path: /Users/tigger/.agents/sdlc/technologies/GO.md
+              sha256: 63a41c24322b2c4144367b69777528b023a30222593c462b0696df98b1967917
+              bytes: 7301
+            - path: /Users/tigger/.agents/sdlc/technologies/WEB.md
+              sha256: c474f4646fae1e318c78c18b68cfe75d7100b2b7dd85d8ad264326fa375bc000
+              bytes: 10423
+            - path: /Users/tigger/code/exodan/deploy/docs/PROJECT-INTEGRATION.md
+              sha256: 17e3917e0c2fbc418303c8e559bc9784cc9698db0d191d306b1ddd93b63b8c39
+              bytes: 35145
+            - path: /Users/tigger/code/tigoss/democrac.ie/.sdlc/project.yaml
+              sha256: ae174d8a62862168caa071e9b03f34c7200221db9c8a9f260be757a2d9c07d17
+              bytes: 520
+            - path: /Users/tigger/code/tigoss/democrac.ie/docs/ARCHITECTURE.md
+              sha256: a33b9973a90d025b7229beb0a9477ab6870150a9d9ccfc198306b627429f63e9
+              bytes: 12119
+            - path: /Users/tigger/code/tigoss/democrac.ie/docs/MVP.md
+              sha256: 91a1661becf3ef280926c94a9cd1b59ba8e4725fcbce9e89f133ba44e84e128a
+              bytes: 6480
+            - path: /Users/tigger/code/tigoss/democrac.ie/docs/VISION.md
+              sha256: 80f1219bc279d82fb5c8c8a245b1ad216dc05f0362ec71c4fc6d68af9180c095
+              bytes: 4755
+            - path: /Users/tigger/code/tigoss/democrac.ie/docs/work.org
+              sha256: 00298af7c1b4059bafee5be8a46983e6d3f266b78cb7b6f7cc0bf83064f0d1bf
+              bytes: 4981
+            - path: /Users/tigger/code/tigoss/democrac.ie/specs/W001-poll-store-cli/spec.org
+              sha256: bc59010683af20771a780cd79110a1f202c75ad277b45c251dcdb228a3eff534
+              bytes: 13052
+          round: 1
+          updated: "2026-10-02T23:10:01Z"
+        - diagnostic: /Users/tigger/code/tigoss/democrac.ie/.sdlc/audit-diagnostics/audit-432057019.log
+          cache_key: sha256:9b639bdc0c7a598af9d76b1505e142020de426d52d7db1135c4e5d5b8b370c2f
+          session_id: 20261003_001004_83c7d1
+          harness: hermes
+          provider: nous
+          model: z-ai/glm-5.3
+          evidence:
+            - path: /Users/tigger/.agents/sdlc/ARCHITECTURE.md
+              sha256: bd7a66ffd967010eefb8dc7abe64b059994c7b0f44ed5f5c30ec73e354f5b7f7
+              bytes: 8154
+            - path: /Users/tigger/.agents/sdlc/CODING.md
+              sha256: a69a5d3b7ce3604b093703d72ab0de1bb6d607f140baab17292d209054fe902f
+              bytes: 13502
+            - path: /Users/tigger/.agents/sdlc/DOCUMENTATION.md
+              sha256: d8696dca9f4ed75cc8487e064a8c6756a418bbe623e55bcde0bc58996b011c9c
+              bytes: 7652
+            - path: /Users/tigger/.agents/sdlc/ISSUES.md
+              sha256: 66982ab8b25b26ea1bfaf40577bf4955bf0c804cfd035ab582c6d9ff658e2581
+              bytes: 16627
+            - path: /Users/tigger/.agents/sdlc/ORG-SCHEMA.md
+              sha256: 4c93e9ebfd051a1caa3a3a456ef20228c4403f3ca00726ed1ac4c93676ac26cc
+              bytes: 4915
+            - path: /Users/tigger/.agents/sdlc/ORGMODE.md
+              sha256: baffdd38fac0c2dd24d2be5389edb2a0b88ea19e8d67e1bc2f6f65d55601b7b3
+              bytes: 2974
+            - path: /Users/tigger/.agents/sdlc/SECURITY.md
+              sha256: fbceb4dffd2ab69a3edcd1dd924873bdbe5298cffa4c2e65548e04541fb78f73
+              bytes: 5027
+            - path: /Users/tigger/.agents/sdlc/TESTING.md
+              sha256: 1a0d1296b6ec080c7c86b24713c4976a7eb6f9fab7071e2369ce2038baaad4f9
+              bytes: 16346
+            - path: /Users/tigger/.agents/sdlc/technologies/GO.md
+              sha256: 63a41c24322b2c4144367b69777528b023a30222593c462b0696df98b1967917
+              bytes: 7301
+            - path: /Users/tigger/.agents/sdlc/technologies/WEB.md
+              sha256: c474f4646fae1e318c78c18b68cfe75d7100b2b7dd85d8ad264326fa375bc000
+              bytes: 10423
+            - path: /Users/tigger/code/exodan/deploy/docs/PROJECT-INTEGRATION.md
+              sha256: 17e3917e0c2fbc418303c8e559bc9784cc9698db0d191d306b1ddd93b63b8c39
+              bytes: 35145
+            - path: /Users/tigger/code/tigoss/democrac.ie/.sdlc/project.yaml
+              sha256: ae174d8a62862168caa071e9b03f34c7200221db9c8a9f260be757a2d9c07d17
+              bytes: 520
+            - path: /Users/tigger/code/tigoss/democrac.ie/docs/ARCHITECTURE.md
+              sha256: a33b9973a90d025b7229beb0a9477ab6870150a9d9ccfc198306b627429f63e9
+              bytes: 12119
+            - path: /Users/tigger/code/tigoss/democrac.ie/docs/MVP.md
+              sha256: 91a1661becf3ef280926c94a9cd1b59ba8e4725fcbce9e89f133ba44e84e128a
+              bytes: 6480
+            - path: /Users/tigger/code/tigoss/democrac.ie/docs/VISION.md
+              sha256: 80f1219bc279d82fb5c8c8a245b1ad216dc05f0362ec71c4fc6d68af9180c095
+              bytes: 4755
+            - path: /Users/tigger/code/tigoss/democrac.ie/docs/work.org
+              sha256: 00298af7c1b4059bafee5be8a46983e6d3f266b78cb7b6f7cc0bf83064f0d1bf
+              bytes: 4981
+            - path: /Users/tigger/code/tigoss/democrac.ie/specs/W001-poll-store-cli/spec.org
+              sha256: bc59010683af20771a780cd79110a1f202c75ad277b45c251dcdb228a3eff534
+              bytes: 13052
+          round: 2
+          revision: W001 spec.org @ sha256 bc59010683af20771a780cd79110a1f202c75ad277b45c251dcdb228a3eff534
+          verdict: FAIL
+          response: |-
+            GATE: definition
+            REVISION: W001 spec.org @ sha256 bc59010683af20771a780cd79110a1f202c75ad277b45c251dcdb228a3eff534
+            VERDICT: FAIL
+
+            Prior incident record (start-failed) produced no findings; nothing to preserve or withdraw. No annotation records or blocks in spec.org; no feedback.yaml required (no processed annotations claimed); no audit-state duplication in the specification.
+
+            Positive assessments (so remediation does not disturb them):
+            - Traceability is complete and bidirectional: AC001.1-001.5 all carry direct :ac: tags and "Proven by" links; RT001.1-001.5 and OT001.1 carry :testdef: tags and "Covers" links; IDs unique and well-formed.
+            - Scope, over-engineering and template inflation: no violation. The event store is the architecture-mandated foundation that W002/W003 explicitly consume (work.org dependencies); the read-only public page is the MVP share-URL target, not new behaviour; the vulncheck entry point is mandated by SECURITY.md for a deployable application; the --input YAML mode is proportionate to multiline option descriptions. Security impact is present and concrete. Tests are feasible at the executable/HTTP boundary with temporary state roots; TDD entry point (RT001.1 failing first) is stated.
+            - Synopsis matches the detailed sections; no material omission.
+
+            FINDINGS
+
+            1. BLOCKING - Contradiction between strict config parsing and the cited Exodan config contract.
+            The design states "Unknown config keys fail rather than being silently ignored" and that config is read from DEFAULT_CONFIG_PATH and CONFIG_PATH. Per the cited read-only authority (PROJECT-INTEGRATION.md), those same files legitimately carry deploy-tool-owned keys: data_dirs is declared in config/defaults.yaml (the file supplied at DEFAULT_CONFIG_PATH), and config/<host>.yaml may carry extra_domains, timers, or service.capabilities. The specification simultaneously leaves asset packaging unresolved ("Bundle or declare HTML/CSS assets by the Exodan data-directory contract"): the "declare" branch places data_dirs into the very file the app parses, so the mandated unknown-key failure rejects the application's own valid deployment configuration. The known-key set is not enumerated, leaving a correctness-relevant boundary decision for the delivery agent to invent.
+            Required remediation: resolve the packaging decision (or make both branches safe), enumerate the application-known key set, and state explicitly how Exodan deploy-tool-owned keys appearing in the same files are treated during parsing (for example, a reserved tolerated key set), so unknown-key rejection applies only to genuinely unrecognized keys.
+
+            2. Documentary - Inaccurate coverage link on edge case "Incomplete initial write".
+            The edge case cites AC001.2/RT001.2, which cover invalid input, not interrupted writes. The observable outcome (partial initial record yields no valid poll) is exercised by RT001.3's damaged-record case; the private-write-then-publish mechanism itself has no implementation-review check.
+            Required remediation: correct the coverage links, and add the implementation-review check for the private-write-then-publish mechanism if structural conformance is to be verified, per ARCHITECTURE.md.
+
+            3. Documentary - Undefined "explicit recovery".
+            "a trailing incomplete record blocks further writes pending explicit recovery" names a recovery concept no W001 requirement exercises (creation is the only mutation) and no definition supplies.
+            Required remediation: one sentence stating what recovery means for W001 (for example, operator-side remediation of the damaged poll directory, with automated recovery deferred to the append-consuming tickets), so the delivery agent does not invent a mechanism.
+
+            Findings 2 and 3 are bounded, reversible corrections; finding 1 requires a design resolution within the already authorized scope and does not authorize expansion.
+          updated: "2026-10-02T23:10:03Z"
+        - diagnostic: /Users/tigger/code/tigoss/democrac.ie/.sdlc/audit-diagnostics/audit-787301518.log
+          cache_key: sha256:4eeb94b95b887c560b0b15756aacab452cd0e9dd1d3d591f7859f3d79fbcfe62
+          session_id: 20261003_001004_83c7d1
+          harness: hermes
+          provider: nous
+          model: z-ai/glm-5.3
+          evidence:
+            - path: /Users/tigger/.agents/sdlc/ARCHITECTURE.md
+              sha256: bd7a66ffd967010eefb8dc7abe64b059994c7b0f44ed5f5c30ec73e354f5b7f7
+              bytes: 8154
+            - path: /Users/tigger/.agents/sdlc/CODING.md
+              sha256: a69a5d3b7ce3604b093703d72ab0de1bb6d607f140baab17292d209054fe902f
+              bytes: 13502
+            - path: /Users/tigger/.agents/sdlc/DOCUMENTATION.md
+              sha256: d8696dca9f4ed75cc8487e064a8c6756a418bbe623e55bcde0bc58996b011c9c
+              bytes: 7652
+            - path: /Users/tigger/.agents/sdlc/ISSUES.md
+              sha256: 66982ab8b25b26ea1bfaf40577bf4955bf0c804cfd035ab582c6d9ff658e2581
+              bytes: 16627
+            - path: /Users/tigger/.agents/sdlc/ORG-SCHEMA.md
+              sha256: 4c93e9ebfd051a1caa3a3a456ef20228c4403f3ca00726ed1ac4c93676ac26cc
+              bytes: 4915
+            - path: /Users/tigger/.agents/sdlc/ORGMODE.md
+              sha256: baffdd38fac0c2dd24d2be5389edb2a0b88ea19e8d67e1bc2f6f65d55601b7b3
+              bytes: 2974
+            - path: /Users/tigger/.agents/sdlc/SECURITY.md
+              sha256: fbceb4dffd2ab69a3edcd1dd924873bdbe5298cffa4c2e65548e04541fb78f73
+              bytes: 5027
+            - path: /Users/tigger/.agents/sdlc/TESTING.md
+              sha256: 1a0d1296b6ec080c7c86b24713c4976a7eb6f9fab7071e2369ce2038baaad4f9
+              bytes: 16346
+            - path: /Users/tigger/.agents/sdlc/technologies/GO.md
+              sha256: 63a41c24322b2c4144367b69777528b023a30222593c462b0696df98b1967917
+              bytes: 7301
+            - path: /Users/tigger/.agents/sdlc/technologies/WEB.md
+              sha256: c474f4646fae1e318c78c18b68cfe75d7100b2b7dd85d8ad264326fa375bc000
+              bytes: 10423
+            - path: /Users/tigger/code/exodan/deploy/docs/PROJECT-INTEGRATION.md
+              sha256: 17e3917e0c2fbc418303c8e559bc9784cc9698db0d191d306b1ddd93b63b8c39
+              bytes: 35145
+            - path: /Users/tigger/code/tigoss/democrac.ie/.sdlc/project.yaml
+              sha256: ae174d8a62862168caa071e9b03f34c7200221db9c8a9f260be757a2d9c07d17
+              bytes: 520
+            - path: /Users/tigger/code/tigoss/democrac.ie/docs/ARCHITECTURE.md
+              sha256: 7bd773485762944d0ffdf23757b2e5cbef4f029d35029efcff5ba952fe18e36c
+              bytes: 12182
+            - path: /Users/tigger/code/tigoss/democrac.ie/docs/MVP.md
+              sha256: 91a1661becf3ef280926c94a9cd1b59ba8e4725fcbce9e89f133ba44e84e128a
+              bytes: 6480
+            - path: /Users/tigger/code/tigoss/democrac.ie/docs/VISION.md
+              sha256: 80f1219bc279d82fb5c8c8a245b1ad216dc05f0362ec71c4fc6d68af9180c095
+              bytes: 4755
+            - path: /Users/tigger/code/tigoss/democrac.ie/docs/work.org
+              sha256: 00298af7c1b4059bafee5be8a46983e6d3f266b78cb7b6f7cc0bf83064f0d1bf
+              bytes: 4981
+            - path: /Users/tigger/code/tigoss/democrac.ie/specs/W001-poll-store-cli/spec.org
+              sha256: 8effbe5d15c3c2636b6c585600c73079737a2df53b910691cc365604e7fe88ea
+              bytes: 13791
+          round: 3
+          revision: W001 spec.org @ sha256 8effbe5d15c3c2636b6c585600c73079737a2df53b910691cc365604e7fe88ea
+          verdict: PROVISIONAL PASS
+          response: |-
+            GATE: definition
+            REVISION: W001 spec.org @ sha256 8effbe5d15c3c2636b6c585600c73079737a2df53b910691cc365604e7fe88ea
+            VERDICT: PROVISIONAL PASS
+
+            Prior-findings resolution (round 1 FAIL):
+            1. Config-key contradiction: RESOLVED. The packaging decision is made (data_dirs: [templates, static] declared in defaults.yaml), the application-known key set is enumerated, Exodan-owned keys (data_dirs, extra_domains, timers, service, exec_args) are explicitly tolerated without reinterpretation, and other unrecognized top-level keys fail. Both branches of the prior ambiguity are now safe and consistent with PROJECT-INTEGRATION.md.
+            2. Edge-case coverage links: RESOLVED. "Incomplete initial write" now cites AC001.3/RT001.3 and adds the implementation-review check for private write, durable initial record and atomic publication.
+            3. Undefined "explicit recovery": RESOLVED. Recovery is now defined as operator-side retention of the damaged directory plus backup restoration or a replacement poll, with automatic truncation or repair prohibited; docs/ARCHITECTURE.md was updated consistently.
+
+            No annotation records or blocks in spec.org; no feedback.yaml required; no audit-state duplication; sign-off metadata concise and impersonal. Scope, over-engineering and template inflation re-checked: no new violations; the input limits and recovery definition close previously acknowledged gaps without adding mechanisms.
+
+            FOLLOW-UP WORK (bounded, reversible; does not invalidate sign-off):
+
+            1. Test coverage for the config-key policy. The remediated decision (tolerate Exodan-owned keys, reject unrecognized top-level keys) is observable behaviour under AC001.5 but no RT case exercises it: RT001.5 checks env-supplied paths and help/version only. Add named child cases to the RT001.5 (or RT001.2) case group: a config file containing Exodan-owned keys loads successfully; an unrecognized top-level key fails with a precise error. This is a compound-condition coverage gap under ISSUES.md/TESTING.md, closable by case additions before the test-code gate.
+
+            2. Test coverage for the new input bounds and normalization. "2–200 options, 200-character title, 200-character option names, 2,000-character descriptions; trim surrounding whitespace; reject empty or duplicate normalized names" states observable behaviour not represented in RT001.2's case list (empty title, fewer than two options, exact duplicate names, malformed base_url, unwritable state). Add named cases: an over-limit title or option name is rejected; option names differing only by surrounding whitespace are rejected as duplicates. Bounded case additions, no design change.
+
+            3. Documentary reconciliation in docs/ARCHITECTURE.md. The body now specifies the interrupted-write/close recovery protocol, superseding the prior "remains to be specified before implementation" stance, but the document retains version 4 with the version-2 changelog note that recovery "remains an explicit design question" and no entry recording the resolution. Record the recovery-protocol decision in the document changelog (increment the version or amend the current entry) per DOCUMENTATION.md's accuracy and changelog rules. Bounded editorial correction to a cited authority, suitable for the delivery handoff's existing "reconcile docs/ARCHITECTURE.md" item.
+
+            Items 1 and 2 should land in spec.org before the test-code gate so the implemented RT package matches the signed-off definitions; item 3 may land with delivery documentation.
+          updated: "2026-10-02T23:16:33Z"
+        - diagnostic: /Users/tigger/code/tigoss/democrac.ie/.sdlc/audit-diagnostics/audit-870547154.log
+          cache_key: sha256:dd32baa29213cd65f8a659a635b165a637e362bee1df8d8ef05afb979c2db302
+          session_id: 20261003_001004_83c7d1
+          harness: hermes
+          provider: nous
+          model: z-ai/glm-5.3
+          evidence:
+            - path: /Users/tigger/.agents/sdlc/ARCHITECTURE.md
+              sha256: bd7a66ffd967010eefb8dc7abe64b059994c7b0f44ed5f5c30ec73e354f5b7f7
+              bytes: 8154
+            - path: /Users/tigger/.agents/sdlc/CODING.md
+              sha256: a69a5d3b7ce3604b093703d72ab0de1bb6d607f140baab17292d209054fe902f
+              bytes: 13502
+            - path: /Users/tigger/.agents/sdlc/DOCUMENTATION.md
+              sha256: d8696dca9f4ed75cc8487e064a8c6756a418bbe623e55bcde0bc58996b011c9c
+              bytes: 7652
+            - path: /Users/tigger/.agents/sdlc/ISSUES.md
+              sha256: 66982ab8b25b26ea1bfaf40577bf4955bf0c804cfd035ab582c6d9ff658e2581
+              bytes: 16627
+            - path: /Users/tigger/.agents/sdlc/ORG-SCHEMA.md
+              sha256: 4c93e9ebfd051a1caa3a3a456ef20228c4403f3ca00726ed1ac4c93676ac26cc
+              bytes: 4915
+            - path: /Users/tigger/.agents/sdlc/ORGMODE.md
+              sha256: baffdd38fac0c2dd24d2be5389edb2a0b88ea19e8d67e1bc2f6f65d55601b7b3
+              bytes: 2974
+            - path: /Users/tigger/.agents/sdlc/SECURITY.md
+              sha256: fbceb4dffd2ab69a3edcd1dd924873bdbe5298cffa4c2e65548e04541fb78f73
+              bytes: 5027
+            - path: /Users/tigger/.agents/sdlc/TESTING.md
+              sha256: 1a0d1296b6ec080c7c86b24713c4976a7eb6f9fab7071e2369ce2038baaad4f9
+              bytes: 16346
+            - path: /Users/tigger/.agents/sdlc/technologies/GO.md
+              sha256: 63a41c24322b2c4144367b69777528b023a30222593c462b0696df98b1967917
+              bytes: 7301
+            - path: /Users/tigger/.agents/sdlc/technologies/WEB.md
+              sha256: c474f4646fae1e318c78c18b68cfe75d7100b2b7dd85d8ad264326fa375bc000
+              bytes: 10423
+            - path: /Users/tigger/code/exodan/deploy/docs/PROJECT-INTEGRATION.md
+              sha256: 17e3917e0c2fbc418303c8e559bc9784cc9698db0d191d306b1ddd93b63b8c39
+              bytes: 35145
+            - path: /Users/tigger/code/tigoss/democrac.ie/.sdlc/project.yaml
+              sha256: ae174d8a62862168caa071e9b03f34c7200221db9c8a9f260be757a2d9c07d17
+              bytes: 520
+            - path: /Users/tigger/code/tigoss/democrac.ie/docs/ARCHITECTURE.md
+              sha256: 87bd9617945dd3159a83d6bd97ad22872f5a94d89e4840972b8cd0e57314c017
+              bytes: 12336
+            - path: /Users/tigger/code/tigoss/democrac.ie/docs/MVP.md
+              sha256: 91a1661becf3ef280926c94a9cd1b59ba8e4725fcbce9e89f133ba44e84e128a
+              bytes: 6480
+            - path: /Users/tigger/code/tigoss/democrac.ie/docs/VISION.md
+              sha256: 80f1219bc279d82fb5c8c8a245b1ad216dc05f0362ec71c4fc6d68af9180c095
+              bytes: 4755
+            - path: /Users/tigger/code/tigoss/democrac.ie/docs/work.org
+              sha256: 00298af7c1b4059bafee5be8a46983e6d3f266b78cb7b6f7cc0bf83064f0d1bf
+              bytes: 4981
+            - path: /Users/tigger/code/tigoss/democrac.ie/specs/W001-poll-store-cli/spec.org
+              sha256: 00977152dfcea8279962ee0f479ec2f1b0a5ff7aebb2148fcd75cbb2d89f4f10
+              bytes: 14214
+          round: 4
+          revision: W001 spec.org @ sha256 00977152dfcea8279962ee0f479ec2f1b0a5ff7aebb2148fcd75cbb2d89f4f10
+          verdict: PASS
+          response: |-
+            GATE: definition
+            REVISION: W001 spec.org @ sha256 00977152dfcea8279962ee0f479ec2f1b0a5ff7aebb2148fcd75cbb2d89f4f10
+            VERDICT: PASS
+
+            Prior provisional-pass follow-ups resolved:
+            1. Config-key policy coverage: RT001.5 now loads a config containing valid Exodan-owned keys alongside base_url (coexistence without altered semantics) and one with an unknown top-level key (precise failure), matching the design decision exactly.
+            2. Input bounds and normalization: RT001.2 now enumerates over-limit title, option-count extremes (fewer than two / more than 200), over-length option names and descriptions, exact duplicates, and whitespace-differing duplicate names, matching the stated constraints.
+            3. Architecture changelog: docs/ARCHITECTURE.md is at version 5 with a changelog entry recording the torn-record fail-closed recovery decision; the older "explicit design question" note remains only as preserved version-2 history, consistent with DOCUMENTATION.md.
+
+            Full re-check of the changed revision: traceability complete and bidirectional; AC/test IDs unique, tagged and well-formed; no annotation records; no feedback.yaml expected; no audit-state duplication; Synopsis consistent with the detail sections; scope, proportionality and template-inflation assessments unchanged with no new mechanisms introduced; security impact retained; tests remain feasible at the executable/HTTP boundary with temporary state roots; TDD entry point stated.
+
+            One non-gating observation for the delivery agent's discretion, not a finding: RT001.5's Exodan-owned key case list names data_dirs, extra_domains, timers and service but not the also-tolerated legacy exec_args; adding it to the case group is optional and requires no specification change.
+          updated: "2026-10-02T23:17:43Z"
