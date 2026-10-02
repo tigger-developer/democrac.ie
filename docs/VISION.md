@@ -1,6 +1,6 @@
 ---
 title: democrac.ie - Vision
-version: 3
+version: 4
 last-updated: 2026-10-02
 ---
 
@@ -10,7 +10,7 @@ democrac.ie is a free, open-source way to make a decision together with your fri
 
 ## USP
 
-Polls use PR-STV, the voting system used in Irish elections (not to the legal letter of the Irish constitution, but in substance): it is basically instant-runoff counting.
+- Polls use PR-STV, the voting system used in Irish elections (not to the legal letter of the Irish constitution, but in substance): it is basically instant-runoff counting. The MVP implements single-winner counting only: simple PR-STV with one winner.
 
 - Voters rank options: first preference, second preference, third preference, and so on, as many or as few as they wish.
 - A voter may rank just a single "1", or "1, 2", or "1, 2, 3, ... " all the way down the full list of options. There is no forced number of rankings and no artificial cap.
@@ -37,7 +37,7 @@ The MVP is a single decision poll product, deliberately narrow.
 2. **Share:** the system generates a poll URL (`/poll/{id}`) which the creator copies and distributes by whatever channel they already use.
 3. **Vote:** anyone with the link can vote anonymously. There is no login for voters. Voters enter a name in a mandatory text box (displayed with results; a self-declared label, not an identity) and rank options by assigning 1, 2, 3, ... preferences, as few or as many as they wish.
 4. **Duplicate deterrence:** MVP cannot truly prevent repeat voting; it sets a cookie after voting and declines a second ballot from the same browser.
-5. **Close:** the poll creator closes the poll manually. There is no scheduled close in the MVP.
+5. **Close:** the poll creator closes the poll manually. There is no scheduled close in the MVP. Closed polls and their results are retained indefinitely; the MVP performs no purging.
 6. **Results:** once closed, anyone with the link sees the full round-by-round count - each round's tallies, which option was eliminated and why, how votes transferred, and the final winner - rendered as an engaging, visual, plain-language explainer.
 7. **Tie handling and audit trail:** when two or more options tie for lowest score at an elimination boundary, the system eliminates one by random draw and records the draw and its order in the audit trail. Every poll mutation - creation, option edits, ballots, close, count events - appends a line to the poll's plain-text CSV/TSV audit trail.
 
@@ -54,7 +54,8 @@ The MVP is a single decision poll product, deliberately narrow.
 - Changing a vote after submission
 - Scheduled / timed poll closure
 - Live results during voting
-- Multi-winner PR-STV quota counting
+- Multi-winner PR-STV quota counting (roadmap)
+- Poll purging (roadmap: configurable; the MVP retains closed polls indefinitely)
 - Export or embeds
 
 ## Roadmap
@@ -66,7 +67,8 @@ Each item is a candidate for later phases, configurable by the poll creator wher
 - **Live results visibility:** creators choose whether tallies are visible during voting or only after close. Default remains after close, to avoid strategic ranking.
 - **Closed-group elections:** creators may supply an email list as the electorate; each participant receives a personal magic link and may cast exactly one ballot. Low friction: receive email, click, vote.
 - **Duplicate detection:** heuristics and electorate restrictions to strengthen one-person-one-vote beyond the cookie.
-- **Poll archiving and retention:** polls expire and are purged on the fleet's usual interval-timer contract.
+- **Multi-winner polls (e.g. "choose the next 3 books for book club"):** full PR-STV quota counting with surplus transfers.
+- **Configurable purge:** creators may set a purge-after-close period; expired polls are deleted on the fleet's usual interval-timer contract. The MVP retains everything.
 
 LICENSE
 Apache 2.0
